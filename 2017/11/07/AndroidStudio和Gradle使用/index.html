@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="AndroidStudio,Gradle,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="环境搭建首先你得先有JDK并且配置好环境变量，默认都会了。你也得有Android SDK，默认也有了。 Android Studio安装Android Studio  下载安装Android Studio： https://developer.android.google.cn/studio/index.html 第一次打开，向导会引导你设置JDK、SDK等必要配置，跟着向导配置即可  Gradl">
+<meta name="keywords" content="AndroidStudio,Gradle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AndroidStudio和Gradle使用">
+<meta property="og:url" content="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="环境搭建首先你得先有JDK并且配置好环境变量，默认都会了。你也得有Android SDK，默认也有了。 Android Studio安装Android Studio  下载安装Android Studio： https://developer.android.google.cn/studio/index.html 第一次打开，向导会引导你设置JDK、SDK等必要配置，跟着向导配置即可  Gradl">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/AndroidStudio目录结构.png">
+<meta property="og:image" content="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/2.png">
+<meta property="og:updated_time" content="2018-11-07T09:59:58.477Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AndroidStudio和Gradle使用">
+<meta name="twitter:description" content="环境搭建首先你得先有JDK并且配置好环境变量，默认都会了。你也得有Android SDK，默认也有了。 Android Studio安装Android Studio  下载安装Android Studio： https://developer.android.google.cn/studio/index.html 第一次打开，向导会引导你设置JDK、SDK等必要配置，跟着向导配置即可  Gradl">
+<meta name="twitter:image" content="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/AndroidStudio目录结构.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/">
+
+
+
+
+
+  <title>AndroidStudio和Gradle使用 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/11/07/AndroidStudio和Gradle使用/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">AndroidStudio和Gradle使用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-07T16:40:29+08:00">
+                2017-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h4><p>首先你得先有JDK并且配置好环境变量，默认都会了。<br>你也得有Android SDK，默认也有了。</p>
+<h5 id="Android-Studio"><a href="#Android-Studio" class="headerlink" title="Android Studio"></a>Android Studio</h5><p>安装Android Studio</p>
+<blockquote>
+<p>下载安装Android Studio： <a href="https://developer.android.google.cn/studio/index.html" target="_blank" rel="noopener">https://developer.android.google.cn/studio/index.html</a></p>
+<p>第一次打开，向导会引导你设置JDK、SDK等必要配置，跟着向导配置即可</p>
+</blockquote>
+<h4 id="Gradle"><a href="#Gradle" class="headerlink" title="Gradle"></a>Gradle</h4><p>Gradle是目前Android主流的构建工具，不管你是通过命令行还是通过AndroidStudio来build，最终都是通过Gradle来实现的。</p>
+<p>使用这个工具可以完成 app 的编译打包等工作.</p>
+<p>Gradle 环境不是必须的，但是对Gradle 的使用有一定帮助，建议安装。</p>
+<p>安装Gradle</p>
+<p>下载安装gradle： <a href="http://services.gradle.org/distributions/" target="_blank" rel="noopener">http://services.gradle.org/distributions/</a><br>配置环境变量</p>
+<blockquote>
+<ul>
+<li>GRADLE_HOME = D:\Program Files\gradle\gradle-4.2.1</li>
+<li>Path += %GRADLE_HOME%\bin</li>
+</ul>
+</blockquote>
+<h5 id="Groovy"><a href="#Groovy" class="headerlink" title="Groovy"></a>Groovy</h5><p>Groovy 是一种动态语言。另外，它和 Java 一样，也运行于 Java 虚拟机中，你可以认为 Groovy<br>扩展了 Java 语言。比如，Groovy对自己的定义就是：Groovy 是在 java 平台上的、 具有像Python， Ruby 和 Smalltalk 语言特性的灵活动态语言， Groovy 保证了这些特性像 Java 语法一样被 Java 开发者使用。<br>同样，Groovy 环境不是必须的，因为groovy代码会最终编译成java字节码，直接在java虚拟机上运行</p>
+<p>安装 Groovy</p>
+<blockquote>
+<p>下载安装Groovy SDK： <a href="http://www.groovy-lang.org/download.html" target="_blank" rel="noopener">http://www.groovy-lang.org/download.html</a><br>配置环境变量<br>GROOVY_HOME = D:\Program Files\groovy-2.4.12<br>Path += %GROOVY_HOME%\bin</p>
+</blockquote>
+<h5 id="Gradle-Wrapper"><a href="#Gradle-Wrapper" class="headerlink" title="Gradle Wrapper"></a>Gradle Wrapper</h5><p>Gradle Wrapper其实就是一个脚本文件，它会在没有安装Gradle的情况下为我们下载Gradle，之后我们就可以使用<code>gradlew</code>命令，像使用<code>gradle</code>一样来使用Gradle了</p>
+<p>Android Studio项目中默认使用了Gradle Wrapper,用Android Studio创建的工程已经配置好Gradle Wrapper，可以直接使用。</p>
+<ol>
+<li>为什么要使用Gradle Wrapper</li>
+</ol>
+<p>每一个Wrapper都会绑定到一个特定版本的Gradle，Wrapper会自动地下载并安装对应版本的Gradle。</p>
+<p>这就带来两个好处：</p>
+<blockquote>
+<ul>
+<li>不必自己下载、安装、配置Gradle</li>
+<li>进行项目构建时能够确保使用正确的Gradle版本（特别是在构建历史项目时特别明显）</li>
+</ul>
+</blockquote>
+<ol>
+<li>将Wrapper添加到Gradle项目</li>
+</ol>
+<p>在命令行中运行 wrapper task 即可配置Wrapper，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradle wrapper –gradle-version 4.1</span><br></pre></td></tr></table></figure>
+<p>在配置了Wrapper的Gradle项目中，会存在以下的重要文件:</p>
+<blockquote>
+<ul>
+<li>gradlew (Unix) 或者 gradlew.bat (Windows)</li>
+<li>gradle/wrapper/gradle-wrapper.jar (Wrapper JAR)</li>
+<li>gradle/wrapper/gradler-wrapper.properties (Wrapper properties)</li>
+</ul>
+</blockquote>
+<p>以上文件都应该放入到版本控制系统中。<br>下载的Gradle发行版被存放在目录 $USER_HOME/.gradle/wrapper/dists 中</p>
+<ol>
+<li>使用gradlew</li>
+</ol>
+<p>当用户安装好了Wrapper后，会在项目的根目录下看到gradlew，它的使用与gradle是一样的。<br>只需要注意，使用的是gradlew而不是gradle命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./gradlew [task] (UNIX/Linux)</span><br><span class="line">gradlew [task] (Windows)</span><br></pre></td></tr></table></figure>
+<p>例如，如果要运行clean和build这个两个task，那么可以执行:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gradlew clean build</span><br></pre></td></tr></table></figure>
+<h6 id="Build"><a href="#Build" class="headerlink" title="Build"></a>Build</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- gradlew assemble //包含了项目中的所有打包相关的任务</span><br><span class="line">- gradlew assembleDebug //编译并打Debug包</span><br><span class="line">- gradlew assembleRelease //编译并打Release的包</span><br></pre></td></tr></table></figure>
+<h4 id="项目代码结构"><a href="#项目代码结构" class="headerlink" title="项目代码结构"></a>项目代码结构</h4><p>Android studio 和 Eclipse ADT 使用的代码结构差异较大</p>
+<ul>
+<li><p>Eclipse Android项目目录结构</p>
+<p>MyEclipseApp<br>​    MyEclipseApp/<br>​      ├── AndroidManifest.xml<br>​        ├── Android.mk<br>​        ├─res<br>​        │  ├─layout<br>​        │  └─values<br>​        └─src<br>​            └─com<br>​                └─android<br>​                    └─myeclipseapp</p>
+</li>
+<li><p>Android Studio 项目目录结构</p>
+</li>
+</ul>
+<p><img src="/2017/11/07/AndroidStudio和Gradle使用/AndroidStudio目录结构.png" alt=""></p>
+<ul>
+<li>gradle编译需要的格式</li>
+</ul>
+<p><img src="/2017/11/07/AndroidStudio和Gradle使用/2.png" alt=""></p>
+<p>一个项目有一个<code>setting.gradle</code>、包括一个顶层的 <code>build.gradle</code>文件、每个Module 都有自己的一个<code>build.gradle</code>文件。</p>
+<p>那些build.gradle是哪来的。现在目录结构是/project/你的工程。用终端到/project这一级目录下直接执行<code>gradle init</code>命令。</p>
+<p>但是这样生成的build.gradle是空的。</p>
+<ul>
+<li>settings.gradle</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include &apos;:app&apos;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>顶层的build.gradle:顶层的<code>build.gradle</code>文件的配置最终会被应用到所有项目中。它典型的配置如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">// 定义了 Android 编译工具的类路径。repositories中,jCenter是一个著名的 Maven 仓库。</span><br><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath &apos;com.android.tools.build:gradle:3.0.1&apos;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">// 定义的属性会被应用到所有 module 中，但是为了保证每个项目的独立性，我们一般不会在这里面操作太多共有的东西。</span><br><span class="line">allprojects&#123;</span><br><span class="line">    repositories&#123;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>每个项目单独的 build.gradle：针对每个module 的配置，如果这里的定义的选项和顶层<code>build.gradle</code>定义的相同，后者会被覆盖。典型的 配置内容如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">apply plugin: &apos;com.android.application&apos;</span><br><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line">    compileSdkVersion 26</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        applicationId &quot;com.um.myeclipseapp&quot;</span><br><span class="line">        minSdkVersion 25</span><br><span class="line">        targetSdkVersion 26</span><br><span class="line">        versionCode 1</span><br><span class="line">        versionName &quot;1.0&quot;</span><br><span class="line">        testInstrumentationRunner &quot;android.support.test.runner.AndroidJUnitRunner&quot;</span><br><span class="line">    &#125;</span><br><span class="line">    buildTypes &#123;</span><br><span class="line">        release &#123;</span><br><span class="line">            minifyEnabled false</span><br><span class="line">            proguardFiles getDefaultProguardFile(&apos;proguard-android.txt&apos;), &apos;proguard-rules.pro&apos;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    implementation fileTree(dir: &apos;libs&apos;, include: [&apos;*.jar&apos;])</span><br><span class="line">    implementation &apos;com.android.support:appcompat-v7:26.0.0-beta1&apos;</span><br><span class="line">    implementation &apos;com.android.support.constraint:constraint-layout:1.0.2&apos;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>apply plugin:第一行代码应用了Android 程序的gradle插件，作为Android 的应用程序，这一步是必须的，因为<code>plugin</code>中提供了Android 编译、测试、打包等等的所有task。</p>
+</li>
+<li><p>android:这是编译文件中最大的代码块，关于android 的所有特殊配置都在这里。</p>
+</li>
+<li><p>defaultConfig：就是程序的默认配置，注意，如果在<code>AndroidMainfest.xml</code>里面定义了与这里相同的属性，会以这里的为主。</p>
+</li>
+<li><p>这里最有必要要说明的是<code>applicationId</code>的选项：在我们曾经定义的<code>AndroidManifest.xml</code>中，那里定义的包名有两个用途：一个是作为程序的唯一识别ID,防止在同一手机装两个一样的程序；另一个就是作为我们<code>R</code>资源类的包名。在以前我们修改这个ID会导致所有用引用R资源类的地方都要修改。但是现在我们如果修改<code>applicationId</code>只会修改当前程序的ID,而不会去修改源码中资源文件的引用。</p>
+</li>
+<li><p>buildTypes:定义了编译类型，针对每个类型我们可以有不同的编译配置，不同的编译配置对应的有不同的编译命令。默认的有debug、release 的类型。</p>
+</li>
+<li><p>dependencies:是属于gradle 的依赖配置。它定义了当前项目需要依赖的其他库。</p>
+<h5 id="Build-1"><a href="#Build-1" class="headerlink" title="Build"></a>Build</h5></li>
+</ul>
+<blockquote>
+<p>gradle init</p>
+<p>gradle build // 编译debug和release版本应用<br>gradle assembleDebug // 编译debug版本应用<br>gradle assembleRelease // 编译release版本应用<br>gradle clean // 执行清理任务，和make clean类似<br>//想了解更多gradle命令，可通过gradle tasks查看</p>
+</blockquote>
+<h5 id=""><a href="#" class="headerlink" title=" "></a> </h5><h4 id="兼容Eclipse-Android项目目录结构"><a href="#兼容Eclipse-Android项目目录结构" class="headerlink" title="兼容Eclipse Android项目目录结构"></a>兼容Eclipse Android项目目录结构</h4><p>由于系统自带应用采用的是Eclipse 的项目目录结构，直接用Android Studio打开不方便编辑、无法<br>编译。所以，我们可以对这类代码增加Gradle 构建支持，以使支持Eclipse和Android Studio 打开。</p>
+<ol>
+<li>命令行进入代码根目录执行，执行 gradle init<br>gradle init 会你的项目增加gradle构建所需的文件（构建脚本：build.gradle和<br>settings.gradle），并且默认使用你本地的Gradle 版本创建Gradle Wrapper。</li>
+<li>使用以下代码替换buile.gradle 的内容</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        jcenter()</span><br><span class="line">        google()</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath &apos;com.android.tools.build:gradle:3.0.1&apos;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">apply plugin: &apos;com.android.application&apos;</span><br><span class="line">android &#123;</span><br><span class="line">   compileSdkVersion 26</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        applicationId &quot;com.um.myeclipseapp&quot;</span><br><span class="line">        minSdkVersion 25</span><br><span class="line">        targetSdkVersion 26</span><br><span class="line">        versionCode 1</span><br><span class="line">        versionName &quot;1.0&quot;</span><br><span class="line">        testInstrumentationRunner &quot;android.support.test.runner.AndroidJUnitRunner&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">sourceSets &#123;</span><br><span class="line">    main&#123;</span><br><span class="line">        manifest.srcFile &apos;AndroidManifest.xml&apos;</span><br><span class="line">        java.srcDirs = [&apos;src&apos;]</span><br><span class="line">        aidl.srcDirs = [&apos;src&apos;]</span><br><span class="line">        res.srcDirs = [&apos;res&apos;]</span><br><span class="line">        assets.srcDirs = [&apos;assets&apos;]</span><br><span class="line">        jniLibs.srcDirs = [&apos;libs&apos;]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        compile fileTree(dir:&apos;libs&apos;, include:[&apos;*.jar&apos;])</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">    allprojects &#123;</span><br><span class="line">        repositories &#123;</span><br><span class="line">            google()</span><br><span class="line">            jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>打开项目，等待同步完即可</li>
+</ol>
+<h4 id="依赖管理"><a href="#依赖管理" class="headerlink" title="依赖管理"></a>依赖管理</h4><ul>
+<li>依赖本地jar库</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    compile fileTree(dir:&apos;libs&apos;, include:[&apos;*.jar&apos;])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>依赖远程库</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    implementation &quot;com.android.support:appcompat-v7:26.1.0&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Native libraries</li>
+</ul>
+<p>配置本地 <code>.so</code>库。在配置文件中做如下配置，然后在对应位置建立文件夹，加入对应平台的<code>.so</code>文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">android&#123;</span><br><span class="line">	sourceSets.main&#123;</span><br><span class="line">        jniLibs.srcDir &apos;src/main/libs&apos;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用隐藏api</li>
+</ul>
+<ol>
+<li>找到未压缩的framework.jar 文件</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">out\target\common\obj\JAVA_LIBRARIES\framework_intermediates\classes.jar</span><br><span class="line">请注意,并不是:</span><br><span class="line">out\target\product\Hi3798MV200\system\framework\framework.jar</span><br><span class="line">第一个是 java库，第二个是编译完成的二进制文件，显然我们需要的是第一个。</span><br></pre></td></tr></table></figure>
+<ol>
+<li>把.jar文件放入你工程的lib中,如：放到项目根目录的 systemjar 目录中</li>
+<li>在项目的 build.gradle增加provided引用：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies &#123;</span><br><span class="line">    provided fileTree(dir:&apos;systemjar&apos;, include:[&apos;*.jar&apos;])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>在build.gradle中修改，在Android SDK放置框架之前部署我们需要的framework.jar：</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">allprojects &#123;</span><br><span class="line">    ...</span><br><span class="line">    gradle.projectsEvaluated &#123;</span><br><span class="line">        tasks.withType(JavaCompile) &#123;</span><br><span class="line">            options.compilerArgs.add(&apos;-Xbootclasspath/p:systemjar/framework.jar&apos;)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>最后,你如果需要在Android Studio里运行，还需要在app/app.iml中，把jdk的顺序调整到最后。</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;orderEntry type=&quot;jdk&quot; jdkName=&quot;Android API 26 Platform&quot; jdkType=&quot;Android SDK&quot; /&gt;</span><br></pre></td></tr></table></figure>
+<p>由于每次编译代码，Anndroid studio 都会修改这个文件，导致手动修改无效。可以在项目的build.gradle 增加以下代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">task pushDownJdkDependency &#123;</span><br><span class="line">    def imlFile = file(&quot;EclipseCompatible.iml&quot;)</span><br><span class="line">    println &apos;Change EclipseCompatible.iml order&apos;</span><br><span class="line">    try &#123;</span><br><span class="line">        def parsedXml = (new XmlParser()).parse(imlFile)</span><br><span class="line">        def jdkNode = parsedXml.component[1].orderEntry.find &#123; it.&apos;@type&apos; == &apos;jdk&apos; &#125;</span><br><span class="line">        parsedXml.component[1].remove(jdkNode)</span><br><span class="line">        new Node(parsedXml.component[1], &apos;orderEntry&apos;, [&apos;type&apos;: &apos;jdk&apos;, &apos;j</span><br><span class="line">        dkName&apos;: &quot;Android API 26 Platform&quot;, &apos;jdkType&apos;: &apos;Android SDK&apos;])</span><br><span class="line">        def writer = new StringWriter()</span><br><span class="line">        new XmlNodePrinter(new PrintWriter(writer)).print(parsedXml)</span><br><span class="line">        imlFile.text = writer.toString()</span><br><span class="line">    &#125; catch (FileNotFoundException e) &#123;</span><br><span class="line">        // nop, iml not found</span><br><span class="line">        println &apos;iml not found&apos;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="应用签名"><a href="#应用签名" class="headerlink" title="应用签名"></a>应用签名</h4><p>可以使用keystore为应用签名<br>由于系统签名不是keystore，对于需要系统签名的的应用，可以使用以下工具把系统的密钥和证书<br>生成keystore</p>
+<blockquote>
+<p>keytool-importkeypair： <a href="https://github.com/getfatday/keytool-importkeypair" target="_blank" rel="noopener">https://github.com/getfatday/keytool-importkeypair</a></p>
+</blockquote>
+<p>签名相关的信息,直接写在gradle不利于安全，我们可以把这些信息写到工程根目录下的<br>signing.properties文件，注意这个文件不要添加进版本控制。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">KEYSTORE_FILE=你的keystore文件位置</span><br><span class="line"></span><br><span class="line">KEYSTORE_PASSWORD= 你的keystore文件密码</span><br><span class="line"></span><br><span class="line">KEY_ALIAS= 你的keystore文件用到的别名</span><br><span class="line"></span><br><span class="line">KEY_PASSWORD= 你的keystore文件用到的别名的密码</span><br></pre></td></tr></table></figure>
+<p>然后在build.gradle中加载这个文件，引用其中的参数就可以了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">/加载签名配置的文件</span><br><span class="line">Properties props = new Properties()props.load(new FileInputStream(file(&quot;s</span><br><span class="line">igning.properties&quot;)))</span><br><span class="line">android &#123;</span><br><span class="line">    signingConfigs &#123;</span><br><span class="line">        release&#123;</span><br><span class="line">            //设置release的签名信息</span><br><span class="line">            keyAlias props[&apos;KEY_ALIAS&apos;]</span><br><span class="line">            keyPassword props[&apos;KEY_PASSWORD&apos;]</span><br><span class="line">            storeFile file(props[&apos;KEYSTORE_FILE&apos;])</span><br><span class="line">            storePassword props[&apos;KEYSTORE_PASSWORD&apos;]</span><br><span class="line">        &#125;</span><br><span class="line">	&#125;</span><br><span class="line">    ...</span><br><span class="line">    buildTypes &#123;</span><br><span class="line">        ...</span><br><span class="line">        release &#123;</span><br><span class="line">            ...</span><br><span class="line">            signingConfig signingConfigs.release</span><br><span class="line">        &#125;	</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="构建变体"><a href="#构建变体" class="headerlink" title="构建变体"></a>构建变体</h4><p>每个构建变体都代表您可以为应用构建的一个不同版本。例如，您可能希望构建应用的免费版本<br>（只提供有限的内容）和付费版本（提供更多内容）；又或者根据芯片、平台的差异，分别构建不<br>同版本，比如我们的工厂模式apk。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ...</span><br><span class="line">    sourceSets &#123;</span><br><span class="line">        ...</span><br><span class="line">        hisi&#123;</span><br><span class="line">            java.srcDirs = [&apos;src&apos;, &apos;chips/hisi&apos;]</span><br><span class="line">        &#125;</span><br><span class="line">        mstar&#123;</span><br><span class="line">            java.srcDirs = [&apos;src&apos;, &apos;chips/mstar&apos;]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    flavorDimensions &quot;chip&quot;</span><br><span class="line">    productFlavors &#123;</span><br><span class="line">        mstar &#123;</span><br><span class="line">        dimension &quot;chip&quot;</span><br><span class="line">        applicationIdSuffix &quot;.mstar&quot;</span><br><span class="line">        versionNameSuffix &quot;-mstar&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        hisi &#123;</span><br><span class="line">            dimension &quot;chip&quot;</span><br><span class="line">            applicationIdSuffix &quot;.hisi&quot;</span><br><span class="line">            versionNameSuffix &quot;-hisi&quot;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h4><blockquote>
+<p>本地安装：File -&gt; Settings -&gt; Plugins -&gt; Install plugin from disk -&gt; 选择打开你已经下载的<br>插件<br>在线安装：File -&gt; Settings -&gt; Plugins -&gt; Browse repositories -&gt; 搜索and选择需要的插件 -&gt;Install</p>
+</blockquote>
+<h5 id="常用插件"><a href="#常用插件" class="headerlink" title="常用插件"></a>常用插件</h5><table>
+<thead>
+<tr>
+<th>Plugin Name</th>
+<th>Plugin link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADB idea</td>
+<td><a href="https://github.com/pbreault/adb-idea" target="_blank" rel="noopener">https://github.com/pbreault/adb-idea</a></td>
+</tr>
+<tr>
+<td>ADB Wifi</td>
+<td><a href="https://github.com/layerlre/ADBWIFI" target="_blank" rel="noopener">https://github.com/layerlre/ADBWIFI</a></td>
+</tr>
+<tr>
+<td>CodeGlance</td>
+<td><a href="https://github.com/Vektah/CodeGlance" target="_blank" rel="noopener">https://github.com/Vektah/CodeGlance</a></td>
+</tr>
+<tr>
+<td>Markdown Navigator</td>
+<td><a href="https://github.com/vsch/idea-multimarkdown" target="_blank" rel="noopener">https://github.com/vsch/idea-multimarkdown</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="资料"><a href="#资料" class="headerlink" title="资料"></a>资料</h4><blockquote>
+<p>Android developer中文网站：<a href="https://developer.android.google.cn" target="_blank" rel="noopener">https://developer.android.google.cn</a><br>深入理解Android之Gradle： <a href="http://blog.csdn.net/innost/article/details/48228651" target="_blank" rel="noopener">http://blog.csdn.net/innost/article/details/48228651</a><br>Android Studio 快捷键：<a href="https://developer.android.google.cn/studio/intro/keyboardshortcuts.html" target="_blank" rel="noopener">https://developer.android.google.cn/studio/intro/keyboardshortcuts.html</a></p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/AndroidStudio/" rel="tag"># AndroidStudio</a>
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/06/Android架构-MVP解析/" rel="next" title="Android架构 MVP解析">
+                <i class="fa fa-chevron-left"></i> Android架构 MVP解析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/01/Android系统启动-Init/" rel="prev" title="Android系统启动_Init">
+                Android系统启动_Init <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#环境搭建"><span class="nav-number">1.</span> <span class="nav-text">环境搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Android-Studio"><span class="nav-number">1.1.</span> <span class="nav-text">Android Studio</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Gradle"><span class="nav-number">2.</span> <span class="nav-text">Gradle</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Groovy"><span class="nav-number">2.1.</span> <span class="nav-text">Groovy</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Gradle-Wrapper"><span class="nav-number">2.2.</span> <span class="nav-text">Gradle Wrapper</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#Build"><span class="nav-number">2.2.1.</span> <span class="nav-text">Build</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#项目代码结构"><span class="nav-number">3.</span> <span class="nav-text">项目代码结构</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Build-1"><span class="nav-number">3.1.</span> <span class="nav-text">Build</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#"><span class="nav-number">3.2.</span> <span class="nav-text"> </span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#兼容Eclipse-Android项目目录结构"><span class="nav-number">4.</span> <span class="nav-text">兼容Eclipse Android项目目录结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖管理"><span class="nav-number">5.</span> <span class="nav-text">依赖管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#应用签名"><span class="nav-number">6.</span> <span class="nav-text">应用签名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#构建变体"><span class="nav-number">7.</span> <span class="nav-text">构建变体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#安装插件"><span class="nav-number">8.</span> <span class="nav-text">安装插件</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#常用插件"><span class="nav-number">8.1.</span> <span class="nav-text">常用插件</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#资料"><span class="nav-number">9.</span> <span class="nav-text">资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

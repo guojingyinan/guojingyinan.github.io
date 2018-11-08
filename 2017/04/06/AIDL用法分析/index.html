@@ -56,13 +56,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
 
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
 
 
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
 
 
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
 
 
 
@@ -89,7 +89,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2017/04/06/AIDL用法分析/1540976120606.png">
 <meta property="og:image" content="http://yoursite.com/2017/04/06/AIDL用法分析/20130927100812265.gif">
-<meta property="og:updated_time" content="2018-11-06T15:25:10.634Z">
+<meta property="og:updated_time" content="2018-11-07T08:34:29.864Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AIDL用法分析">
 <meta name="twitter:description" content="什么是AIDL服务​    一般创建的服务并不能被其他的应用程序访问。为了使其他的应用程序也可以访问本应用程序提供的服务，Android系统采用了远程过程调用（Remote Procedure Call，RPC）方式来实现。与很多其他的基于RPC的解决方案一样，Android使用一种接口定义语言（Interface Definition Language，IDL）来公开服务的接口。因此，可以将这">
@@ -271,7 +271,7 @@
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
       <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/images/logo.jpg">
     </span>
 
     <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
@@ -335,7 +335,6 @@
       
         <ol>
 <li><h5 id="什么是AIDL服务"><a href="#什么是AIDL服务" class="headerlink" title="什么是AIDL服务"></a>什么是AIDL服务</h5><p>​    一般创建的服务并不能被其他的应用程序访问。为了使其他的应用程序也可以访问本应用程序提供的服务，Android系统采用了远程过程调用（Remote Procedure Call，RPC）方式来实现。与很多其他的基于RPC的解决方案一样，Android使用一种接口定义语言（Interface Definition Language，IDL）来公开服务的接口。因此，可以将这种可以跨进程访问的服务称为AIDL（Android Interface Definition Language）服务。</p>
-<a id="more"></a>
 <h5 id="服务端创建过程"><a href="#服务端创建过程" class="headerlink" title="服务端创建过程"></a>服务端创建过程</h5><ol>
 <li>新建一个扩展名为IMyService.aidl的文件，并写下需要的接口。重新编译，会自动生成一个IMyService.java文件。</li>
 <li>建立一个服务类（Service的子类）。并在创建的服务类中创建一个内部类，实现由aidl文件生成的Java接口。在服务类的onBind方法返回时，将实现aidl接口的内部类对象返回出去。</li>
@@ -414,14 +413,18 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2017/03/07/Android中实现延时执行操作的几种方法/" rel="next" title="Android中实现延时执行操作的几种方法">
+                <i class="fa fa-chevron-left"></i> Android中实现延时执行操作的几种方法
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/11/06/hello-world/" rel="prev" title="Hello World">
-                Hello World <i class="fa fa-chevron-right"></i>
+              <a href="/2017/08/06/Android架构-MVP解析/" rel="prev" title="Android架构 MVP解析">
+                Android架构 MVP解析 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -488,6 +491,8 @@
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
               <p class="site-author-name" itemprop="name">zeng</p>
               <p class="site-description motion-element" itemprop="description"></p>
           </div>
@@ -499,22 +504,31 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
             
 
             
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
 
             
               
               
               <div class="site-state-item site-state-tags">
-                
-                  <span class="site-state-item-count">1</span>
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">标签</span>
-                
+                </a>
               </div>
             
 

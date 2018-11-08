@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Odex,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="如果我们在user版本用mm编译apk时，会在out目录下生成.apk和.odex两个文件，是为了加快运行速度，把dex分出来做的预优化处理。但是一般开发时需要mm编译出一个完整的apk，直接用adb进行安装就可以进行调试。这样的话我们有两个选择，一个选择是切到非user版本坐编译 ，另外一种方案就是在当前的需要编译的app目录的.mk文件中加入如下代码关闭对于当前APK的预优化处理即可： 1LO">
+<meta name="keywords" content="Android,Odex">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android首次启动时间长优化之预编译提取Odex">
+<meta property="og:url" content="http://yoursite.com/2018/11/07/Android首次启动时间长优化之预编译提取Odex/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="如果我们在user版本用mm编译apk时，会在out目录下生成.apk和.odex两个文件，是为了加快运行速度，把dex分出来做的预优化处理。但是一般开发时需要mm编译出一个完整的apk，直接用adb进行安装就可以进行调试。这样的话我们有两个选择，一个选择是切到非user版本坐编译 ，另外一种方案就是在当前的需要编译的app目录的.mk文件中加入如下代码关闭对于当前APK的预优化处理即可： 1LO">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-08T02:23:12.384Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android首次启动时间长优化之预编译提取Odex">
+<meta name="twitter:description" content="如果我们在user版本用mm编译apk时，会在out目录下生成.apk和.odex两个文件，是为了加快运行速度，把dex分出来做的预优化处理。但是一般开发时需要mm编译出一个完整的apk，直接用adb进行安装就可以进行调试。这样的话我们有两个选择，一个选择是切到非user版本坐编译 ，另外一种方案就是在当前的需要编译的app目录的.mk文件中加入如下代码关闭对于当前APK的预优化处理即可： 1LO">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/07/Android首次启动时间长优化之预编译提取Odex/">
+
+
+
+
+
+  <title>Android首次启动时间长优化之预编译提取Odex | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/07/Android首次启动时间长优化之预编译提取Odex/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android首次启动时间长优化之预编译提取Odex</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-07T19:45:16+08:00">
+                2018-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/framework/" itemprop="url" rel="index">
+                    <span itemprop="name">framework</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>如果我们在user版本用mm编译apk时，会在out目录下生成.apk和.odex两个文件，是为了加快运行速度，把dex分出来做的预优化处理。但是一般开发时需要mm编译出一个完整的apk，直接用adb进行安装就可以进行调试。这样的话我们有两个选择，一个选择是切到非user版本坐编译 ，另外一种方案就是在当前的需要编译的app目录的.mk文件中加入如下代码关闭对于当前APK的预优化处理即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LOCAL_DEX_PREOPT := false</span><br></pre></td></tr></table></figure>
+<p>那么为什么user版本会对apk进行预优化处理呢,在device.mk里面 或者device下面别的.mk文件里面会有如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ifeq ($(TARGET_BUILD_VARIANT), user)</span><br><span class="line">      ifeq ($(WITH_DEXPREOPT),)</span><br><span class="line">       WITH_DEXPREOPT ?= true</span><br></pre></td></tr></table></figure>
+<p>什么是预优化。</p>
+<p>对于Android而言，预优化也就是把Android在launch或者runtime时候所需要做的一些事儿，把这些事儿提前到编译期来达到Android启动速度的加速和APP运行速度的加速。</p>
+<p>Android预优化的原理。</p>
+<p>在5.0之前 Android一直用的DVM虚拟机，到了5.0换成了ART。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">（1）JVM：JVM虚拟机运行的是java字节码。Java文件到JVM的过程是：</span><br><span class="line">	java -&gt; java bytecode(class) -&gt; java bytecode(jar)。</span><br><span class="line">（2）DVM：DVM虚拟机解析执行的dex字节码。Java文件到DVM的过程是：</span><br><span class="line">	java -&gt; java bytecode(class) -&gt; dalvik bytecode(dex)。</span><br><span class="line">（3）ART：ART虚拟机执行本地机器码。Java文件到ART的过程是：</span><br><span class="line">	java -&gt; java bytecode(class) -&gt; dalvik bytecode(dex) -&gt; optimized android runtime machine code(oat)。</span><br></pre></td></tr></table></figure>
+<p>我们能看到，从java文件到虚拟机执行代码，ART比DVM多了oat的过程。</p>
+<p>ART所使用的AOT(Ahead-Of-Time) 编译，在首次安装应用的时候，字节码预编译成机器码存在本地。</p>
+<p>DVM是典型的JIT(Just-In-Time) ,应用每次运行的时候，字节码都需要即时的编译转换成机器码再执行。</p>
+<p>那么对于ART而言就省去了解析字节码的过程，占用内存也会相应的减少，从而提升APP的运行效率。</p>
+<p>应用程序的安装有两种情况，第一：首次启动系统时安装；第二：系统启动完成后安装。在系统首次启动的场景中，系统会对/system/app、/system/priv-app、/data/app目录下的所有APK进行dex字节码到本地机器码的翻译，同样也会对/system/framework目录下的APK或者JAR文件，以及这些APK所引用的外部JAR，进行dex字节码到本地机器码的翻译。这样可以保证除了应用之外，系统中使用Java来开发的系统服务，也会统一地从dex字节码翻译成本地机器码。详细内容请移步老罗的博客Android ART运行时无缝替换Dalvik虚拟机的过程分析。</p>
+<h5 id="JVM、DVM、ART虚拟机了解"><a href="#JVM、DVM、ART虚拟机了解" class="headerlink" title="JVM、DVM、ART虚拟机了解"></a>JVM、DVM、ART虚拟机了解</h5><ul>
+<li><p>JVM虚拟机运行的是java字节码：</p>
+<p><strong>java-&gt;java bytecode（class）-&gt;java bytecode（jar）</strong><br>注:java虚拟机基于栈，基于栈的机器必须使用指令来载入和操作栈上的数据，所需指令相对来说比较多。</p>
+</li>
+<li><p>Dalvik虚拟机解释执行的dex字节码：</p>
+<p><strong>java-&gt;java bytecode（class）-&gt;dalvik bytecode（dex）</strong><br>相对JVM，Dalvik基于寄存器，且经过优化并允许有限的内存中同时运行多个虚拟机实例，每个Dalvik应用作为一个独立的Linxu进程执行。如果一个应用中有很多类，编译后会相应生成很多class文件，class文件之间也会有不少冗余信息，dex格式文件把所有classs文件内容整合到一个文件，这样可以减少整体文件占用，IO操作，同时也提高了类的查找速度。此外，dex格式文件增加了新的操作码支持，文件结构也相对简洁，使用等长的指令来提高解析速度。而且dex文件会尽量扩大只读结构的大小，来提高进程间数据共享的速度。</p>
+</li>
+<li><p>ART虚拟机执行的本地机器码：</p>
+<p><strong>java-&gt;java bytecode（class）-&gt;dalvik bytecode（dex）-&gt;optimized android runtime machine code（oat）</strong><br>注：ART所使用的AOT（Ahead-Of-Time）编译，在应用首次安装时，字节码预编译成机器码存储在本地，也就是说在程序运行前编译。而Dalvik是典型的JIT（Just_In_Time），此模式下，应用每次运行的时候，字节码都需要即时编译器转换为机器码再执行，也就是在程序运行时编译。因此在App运行时，ART模式相对于Dalvik省去了解释字节码的过程，占用内存也相应减少，进而提高App的运行效率。</p>
+</li>
+</ul>
+<h5 id="Odex"><a href="#Odex" class="headerlink" title="Odex"></a>Odex</h5><p> 从上面一节中我们知道，在编译打包APK时，Java类会被编译成一个或者多个字节码文件（.class），通过dx工具CLASS文件转换成一个DEX（Dalvik Executable）文件。<br>​    通常情况下，我们看到的Android应用程序实际上是一个以.apk为后缀名的压缩文件。我们可以通过压缩工具对apk进行解压，解压出来的内容中有一个名为classes.dex的文件。那么我们首次开机的时候系统需要将其从apk中解压出来保存在data/app目录中。<br>​    如果当前运行在Dalvik虚拟机下，Dalvik会对classes.dex进行一次“翻译”，“翻译”的过程也就是守护进程installd的函数dexopt来对dex字节码进行优化，实际上也就是由dex文件生成odex文件，最终odex文件被保存在手机的VM缓存目录data/dalvik-cache下（注意！这里所生成的odex文件依旧是以dex为后缀名，格式如：system@priv-app@<a href="mailto:Settings@Settings.apk" target="_blank" rel="noopener">Settings@Settings.apk</a>@classes.dex）。<br>​    如果当前运行于Art模式下，    Art同样会在首次进入系统的时候调用/system/bin/dexopt工具来将dex字节码翻译成本地机器码，保存在data/dalvik-cache下。<br>​    那么这里需要注意的是，无论是对dex字节码进行优化，还是将dex字节码翻译成本地机器码，最终得到的结果都是保存在相同名称的一个odex文件里面的，但是前者对应的是一个dey文件（表示这是一个优化过的dex），后者对应的是一个oat文件（实际上是一个自定义的elf文件，里面包含的都是本地机器指令）。简单来说无论是Art模式，还是DVM，优化的结果都是一个odex文件，只是这两种odex文件有着本质的区别（一个是dey字节码，一个是oat机器码）。之所以这么设计，主要通过这种方式，原来任何通过绝对路径引用了该odex文件的代码就都不需要修改了，可以理解为这是art与dalvik兼容的结果。<br>​    由于在系统首次启动时会对应用进行安装，那么在预置APK比较多的情况下，将会大大增加系统首次启动的时间。从前面的描述可知，既然无论是DVM还是ART，对DEX的优化结果都是保存在一个相同名称的odex文件，那么如果我们把这两个过程在ROM编译的时候预处理提取Odex文件将会大大优化系统首次启动的时间。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Odex/" rel="tag"># Odex</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/07/Android运行时ART加载OAT文件的过程分析/" rel="next" title="Android运行时ART加载OAT文件的过程分析">
+                <i class="fa fa-chevron-left"></i> Android运行时ART加载OAT文件的过程分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#JVM、DVM、ART虚拟机了解"><span class="nav-number">1.</span> <span class="nav-text">JVM、DVM、ART虚拟机了解</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Odex"><span class="nav-number">2.</span> <span class="nav-text">Odex</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

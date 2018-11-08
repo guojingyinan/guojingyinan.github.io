@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Init,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="整个Android系统的启动分为Linux Kernel的启动和Android系统的启动。Linux Kernel启动起来后，然后运行第一个用户程序，在Android中就是init程序。 ​    init是linux系统中用户空间的第一个进程。由于Android是基于linux内核的，所以init也是Android系统中用户空间的第一个进程，它的进程号是1。  init进程的入口文件在syste">
+<meta name="keywords" content="Android,Init">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android系统启动_Init">
+<meta property="og:url" content="http://yoursite.com/2018/03/01/Android系统启动-Init/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="整个Android系统的启动分为Linux Kernel的启动和Android系统的启动。Linux Kernel启动起来后，然后运行第一个用户程序，在Android中就是init程序。 ​    init是linux系统中用户空间的第一个进程。由于Android是基于linux内核的，所以init也是Android系统中用户空间的第一个进程，它的进程号是1。  init进程的入口文件在syste">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/03/01/Android系统启动-Init/1540983920749.png">
+<meta property="og:updated_time" content="2018-11-07T11:26:55.073Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android系统启动_Init">
+<meta name="twitter:description" content="整个Android系统的启动分为Linux Kernel的启动和Android系统的启动。Linux Kernel启动起来后，然后运行第一个用户程序，在Android中就是init程序。 ​    init是linux系统中用户空间的第一个进程。由于Android是基于linux内核的，所以init也是Android系统中用户空间的第一个进程，它的进程号是1。  init进程的入口文件在syste">
+<meta name="twitter:image" content="http://yoursite.com/2018/03/01/Android系统启动-Init/1540983920749.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/03/01/Android系统启动-Init/">
+
+
+
+
+
+  <title>Android系统启动_Init | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/01/Android系统启动-Init/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android系统启动_Init</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-01T19:21:48+08:00">
+                2018-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/系统启动流程/" itemprop="url" rel="index">
+                    <span itemprop="name">系统启动流程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>整个Android系统的启动分为Linux Kernel的启动和Android系统的启动。Linux Kernel启动起来后，然后运行第一个用户程序，在Android中就是init程序。</p>
+<p>​    init是linux系统中用户空间的第一个进程。由于Android是基于linux内核的，所以init也是Android系统中用户空间的第一个进程，它的进程号是1。</p>
+<p><img src="/2018/03/01/Android系统启动-Init/1540983920749.png" alt="1540983920749"></p>
+<p>init进程的入口文件在<code>system/core/init/init.cpp</code>中，由于init是命令行程序，所以分析init.cpp首先应从main函数开始：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">int main(int argc, char** argv) &#123;    // 入口函数main</span><br><span class="line">    if (!strcmp(basename(argv[0]), &quot;ueventd&quot;)) &#123;</span><br><span class="line">        return ueventd_main(argc, argv);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (!strcmp(basename(argv[0]), &quot;watchdogd&quot;)) &#123;</span><br><span class="line">        return watchdogd_main(argc, argv);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Clear the umask.</span><br><span class="line">    umask(0);   // 清除屏蔽字(file mode creation mask)，保证新建的目录的访问权限不受屏蔽字影响。</span><br><span class="line">    add_environment(&quot;PATH&quot;, _PATH_DEFPATH);</span><br><span class="line">    </span><br><span class="line">    bool is_first_stage = (argc == 1) || (strcmp(argv[1], &quot;--second-stage&quot;) != 0);    // 判断是否是系统启动的第一阶段，只有启动参数中有--second-stage才为第二阶段</span><br><span class="line">    // Get the basic filesystem setup we need put together in the initramdisk </span><br><span class="line">    // on / and then we&apos;ll let the rc file figure out the rest. </span><br><span class="line">    if (is_first_stage) &#123; </span><br><span class="line">        mount(&quot;tmpfs&quot;, &quot;/dev&quot;, &quot;tmpfs&quot;, MS_NOSUID, &quot;mode=0755&quot;);                        // 挂载tmpfs文件系统 </span><br><span class="line">        mkdir(&quot;/dev/pts&quot;, 0755); </span><br><span class="line">        mkdir(&quot;/dev/socket&quot;, 0755); </span><br><span class="line">        mount(&quot;devpts&quot;, &quot;/dev/pts&quot;, &quot;devpts&quot;, 0, NULL);                                 // 挂载devpts文件系统 </span><br><span class="line">        #define MAKE_STR(x) __STRING(x) </span><br><span class="line">        mount(&quot;proc&quot;, &quot;/proc&quot;, &quot;proc&quot;, 0, &quot;hidepid=2,gid=&quot; MAKE_STR(AID_READPROC));     // 挂载proc文件系统 </span><br><span class="line">        mount(&quot;sysfs&quot;, &quot;/sys&quot;, &quot;sysfs&quot;, 0, NULL);                                       // 挂载sysfs文件系统</span><br></pre></td></tr></table></figure>
+<p>init的主要职责在于：</p>
+<ul>
+<li>创建文件系统目录并挂载相关的文件系统</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mount(&quot;tmpfs&quot;, &quot;/dev&quot;, &quot;tmpfs&quot;, MS_NOSUID, &quot;mode=0755&quot;);</span><br><span class="line">mkdir(&quot;/dev/pts&quot;, 0755);</span><br><span class="line">mkdir(&quot;/dev/socket&quot;, 0755);</span><br><span class="line">mount(&quot;devpts&quot;, &quot;/dev/pts&quot;, &quot;devpts&quot;, 0, NULL);</span><br><span class="line">#define MAKE_STR(x) __STRING(x)</span><br><span class="line">mount(&quot;proc&quot;, &quot;/proc&quot;, &quot;proc&quot;, 0, &quot;hidepid=2,gid=&quot; MAKE_STR(AID_READPROC));</span><br><span class="line">mount(&quot;sysfs&quot;, &quot;/sys&quot;, &quot;sysfs&quot;, 0, NULL);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>初始化属性，提供property service(属性服务)管理Android系统中的属性</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">property_init();// 初始化属性域 --&gt; 定义于system/core/init/Property_service.cpp</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>处理配置文件命令（主要是init.rc脚本文件）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/* 解析init.rc */</span><br><span class="line">Parser&amp; parser = Parser::GetInstance();</span><br><span class="line">parser.AddSectionParser(&quot;service&quot;,std::make_unique&lt;ServiceParser&gt;());</span><br><span class="line">parser.AddSectionParser(&quot;on&quot;, std::make_unique&lt;ActionParser&gt;());</span><br><span class="line">parser.AddSectionParser(&quot;import&quot;, std::make_unique&lt;ImportParser&gt;());</span><br><span class="line">parser.ParseConfig(&quot;/init.rc&quot;);</span><br></pre></td></tr></table></figure>
+<p>init.rc是一个配置文件，内部由Android初始化语言编写（Android Init Language）编写的脚本，主要包含五种类型语句：Action、Command、Service、Option和Import，在分析代码的过程中我们会详细介绍。</p>
+<p>　　init.rc的配置代码在：system/core/rootdir/init.rc 中</p>
+<p>　　init.rc文件是在init进程启动后执行的启动脚本，文件中记录着init进程需执行的操作。</p>
+<p>　　init.rc文件大致分为两大部分，一部分是以“on”关键字开头的动作列表（action list）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">on early-init      // Action类型语句</span><br><span class="line">    # Set init and its forked children&apos;s oom_adj.     // #：注释符号</span><br><span class="line">    write /proc/1/oom_score_adj -1000</span><br><span class="line">    ... ...</span><br><span class="line">    start ueventd</span><br></pre></td></tr></table></figure>
+<p>​    Action类型语句格式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">on &lt;trigger&gt; [&amp;&amp; &lt;trigger&gt;]*     // 设置触发器  </span><br><span class="line">   &lt;command&gt;  </span><br><span class="line">   &lt;command&gt;      // 动作触发之后要执行的命令</span><br></pre></td></tr></table></figure>
+<p>​    另一部分是以“service”关键字开头的服务列表（service list）：  如 Zygote</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">service ueventd /sbin/ueventd</span><br><span class="line">    class core</span><br><span class="line">    critical</span><br><span class="line">    seclabel u:r:ueventd:s0</span><br><span class="line">    </span><br><span class="line">service dvbserver /vendor/bin/dvbserver</span><br><span class="line">    user root                         </span><br><span class="line">    group root</span><br></pre></td></tr></table></figure>
+<p>Service类型语句格式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">service &lt;name&gt; &lt;pathname&gt; [ &lt;argument&gt; ]*   // &lt;service的名字&gt;&lt;执行程序路径&gt;&lt;传递参数&gt;  </span><br><span class="line">   &lt;option&gt;       // option是service的修饰词，影响什么时候、如何启动services  </span><br><span class="line">   &lt;option&gt;  </span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
+<p>借助系统环境变量或Linux命令，动作列表用于创建所需目录，以及为某些特定文件指定权限，而服务列表用来记录init进程需要启动的一些子进程。如上面代码所示，service关键字后的第一个字符串表示服务（子进程）的名称，第二个字符串表示服务的执行路径。</p>
+</li>
+</ul>
+<p>值得一提的是在Android 7.0中对init.rc文件进行了拆分，每个服务一个rc文件。我们要分析的zygote服务的启动脚本则在init.zygoteXX.rc中定义。</p>
+<p>　　在init.rc的import段我们看到如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import /init.$&#123;ro.zygote&#125;.rc </span><br><span class="line">//可以看出init.rc不再直接引入一个固定的文件，而是根据属性ro.zygote的内容来引入不同的文件</span><br></pre></td></tr></table></figure>
+<p>init.zygote64.rc的代码如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server</span><br><span class="line"># class是一个option，指定zygote服务的类型为main</span><br><span class="line">    class main  </span><br><span class="line"># socket关键字表示一个option，创建一个名为dev/socket/zygote，类型为stream，权限为660的socket</span><br><span class="line">    socket zygote stream 660 root system</span><br><span class="line"># onrestart是一个option，说明在zygote重启时需要执行的command</span><br><span class="line">    onrestart write /sys/android_power/request_state wake          </span><br><span class="line">    onrestart write /sys/power/state on</span><br><span class="line">    onrestart restart audioserver</span><br><span class="line">    onrestart restart cameraserver</span><br><span class="line">    onrestart restart media</span><br><span class="line">    onrestart restart netd</span><br><span class="line">    writepid /dev/cpuset/foreground/tasks</span><br></pre></td></tr></table></figure>
+<p>可以看到zygote的class是main, 它是在<code>on nonencrypted</code>时被启动的，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">on nonencrypted</span><br><span class="line">    # A/B update verifier that marks a successful boot.</span><br><span class="line">    exec - root cache -- /system/bin/update_verifier nonencrypted</span><br><span class="line">    class_start main</span><br><span class="line">    class_start late_start</span><br></pre></td></tr></table></figure>
+<p>Init.cpp的main函数分析完毕,init进程已经启动完成，一些重要的服务如core服务和main服务也都启动起来，并启动了zygote（/system/bin/app_process64）进程，zygote初始化时会创建虚拟机，启动systemserver等。</p>
+<p>原文：<a href="https://www.cnblogs.com/pepsimaxin/p/6740413.html" target="_blank" rel="noopener">https://www.cnblogs.com/pepsimaxin/p/6740413.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Init/" rel="tag"># Init</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/07/AndroidStudio和Gradle使用/" rel="next" title="AndroidStudio和Gradle使用">
+                <i class="fa fa-chevron-left"></i> AndroidStudio和Gradle使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/03/Android系统启动-Zygote/" rel="prev" title="Android系统启动_Zygote">
+                Android系统启动_Zygote <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,ART,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="​    OAT文件是一种Android私有ELF文件格式，它不仅包含有从DEX文件翻译而来的本地机器指令，还包含有原来的DEX文件内容。这使得我们无需重新编译原有的APK就可以让它正常地在ART里面运行，也就是我们不需要改变原来的APK编程接口。本文我们通过OAT文件的加载过程分析OAT文件的结构，为后面分析ART的工作原理打基础。 OAT文件的结构如图1所示：  ​    由于OAT文件本质上">
+<meta name="keywords" content="Android,ART">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android运行时ART加载OAT文件的过程分析">
+<meta property="og:url" content="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="​    OAT文件是一种Android私有ELF文件格式，它不仅包含有从DEX文件翻译而来的本地机器指令，还包含有原来的DEX文件内容。这使得我们无需重新编译原有的APK就可以让它正常地在ART里面运行，也就是我们不需要改变原来的APK编程接口。本文我们通过OAT文件的加载过程分析OAT文件的结构，为后面分析ART的工作原理打基础。 OAT文件的结构如图1所示：  ​    由于OAT文件本质上">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/20140914023348415">
+<meta property="og:image" content="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/20140924020914024.png">
+<meta property="og:updated_time" content="2018-11-07T11:14:35.570Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android运行时ART加载OAT文件的过程分析">
+<meta name="twitter:description" content="​    OAT文件是一种Android私有ELF文件格式，它不仅包含有从DEX文件翻译而来的本地机器指令，还包含有原来的DEX文件内容。这使得我们无需重新编译原有的APK就可以让它正常地在ART里面运行，也就是我们不需要改变原来的APK编程接口。本文我们通过OAT文件的加载过程分析OAT文件的结构，为后面分析ART的工作原理打基础。 OAT文件的结构如图1所示：  ​    由于OAT文件本质上">
+<meta name="twitter:image" content="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/20140914023348415">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/">
+
+
+
+
+
+  <title>Android运行时ART加载OAT文件的过程分析 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/07/Android运行时ART加载OAT文件的过程分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android运行时ART加载OAT文件的过程分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-07T18:50:41+08:00">
+                2018-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/framework/" itemprop="url" rel="index">
+                    <span itemprop="name">framework</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>​    OAT文件是一种Android私有ELF文件格式，它不仅包含有从DEX文件翻译而来的本地机器指令，还包含有原来的DEX文件内容。这使得我们无需重新编译原有的APK就可以让它正常地在ART里面运行，也就是我们不需要改变原来的APK编程接口。本文我们通过OAT文件的加载过程分析OAT文件的结构，为后面分析ART的工作原理打基础。</p>
+<p>OAT文件的结构如图1所示：</p>
+<p><img src="/2018/11/07/Android运行时ART加载OAT文件的过程分析/20140914023348415" alt="img"></p>
+<p>​    由于OAT文件本质上是一个ELF文件，因此在最外层它具有一般ELF文件的结构，例如它有标准的ELF文件头以及通过段（Section）来描述文件内容。</p>
+<pre><code>作为Android私有的一种ELF文件，OAT文件包含有两个特殊的段oatdata和oatexec，前者包含有用来生成本地机器指令的dex文件内容，后者包含有生成的本地机器指令，它们之间的关系通过储存在oatdata段前面的oat头部描述。此外，在OAT文件的dynamic段，导出了三个符号oatdata、oatexec和oatlastword，它们的值就是用来界定oatdata段和oatexec段的起止位置的。其中，[oatdata, oatexec - 1]描述的是oatdata段的起止位置，而[oatexec, oatlastword + 3]描述的是oatexec的起止位置。
+</code></pre><p>在分析OAT文件的加载过程之前，我们需要简单介绍一下OAT是如何产生的。如前面<a href="http://blog.csdn.net/luoshengyang/article/details/18006645" target="_blank" rel="noopener">Android ART运行时无缝替换Dalvik虚拟机的过程分析</a>一文所示，APK在安装的过程中，会通过dex2oat工具生成一个OAT文件：</p>
+<p> 这个函数定义在文件frameworks/native/cmds/installd/commands.c中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">static void run_dex2oat(int zip_fd, int oat_fd, const char* input_file_name,  </span><br><span class="line">    const char* output_file_name, const char* dexopt_flags)  </span><br><span class="line">&#123;  </span><br><span class="line">    static const char* DEX2OAT_BIN = &quot;/system/bin/dex2oat&quot;;  </span><br><span class="line">    static const int MAX_INT_LEN = 12;      // &apos;-&apos;+10dig+&apos;\0&apos; -OR- 0x+8dig  </span><br><span class="line">    char zip_fd_arg[strlen(&quot;--zip-fd=&quot;) + MAX_INT_LEN];  </span><br><span class="line">    char zip_location_arg[strlen(&quot;--zip-location=&quot;) + PKG_PATH_MAX];  </span><br><span class="line">    char oat_fd_arg[strlen(&quot;--oat-fd=&quot;) + MAX_INT_LEN];  </span><br><span class="line">    char oat_location_arg[strlen(&quot;--oat-name=&quot;) + PKG_PATH_MAX];  </span><br><span class="line">  </span><br><span class="line">    sprintf(zip_fd_arg, &quot;--zip-fd=%d&quot;, zip_fd);  </span><br><span class="line">    sprintf(zip_location_arg, &quot;--zip-location=%s&quot;, input_file_name);  </span><br><span class="line">    sprintf(oat_fd_arg, &quot;--oat-fd=%d&quot;, oat_fd);  </span><br><span class="line">    sprintf(oat_location_arg, &quot;--oat-location=%s&quot;, output_file_name);  </span><br><span class="line">  </span><br><span class="line">    ALOGV(&quot;Running %s in=%s out=%s\n&quot;, DEX2OAT_BIN, input_file_name, output_file_name);  </span><br><span class="line">    execl(DEX2OAT_BIN, DEX2OAT_BIN,  </span><br><span class="line">          zip_fd_arg, zip_location_arg,  </span><br><span class="line">          oat_fd_arg, oat_location_arg,  </span><br><span class="line">          (char*) NULL);  </span><br><span class="line">    ALOGE(&quot;execl(%s) failed: %s\n&quot;, DEX2OAT_BIN, strerror(errno));  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>APK安装过程中生成的OAT文件的输入只有一个DEX文件，也就是来自于打包在要安装的APK文件里面的classes.dex文件。实际上，一个OAT文件是可以由若干个DEX生成的。这意味着在生成的OAT文件的oatdata段中，包含有多个DEX文件。那么，在什么情况下，会生成包含多个DEX文件的OAT文件呢？</p>
+<p>从前面Android ART运行时无缝替换Dalvik虚拟机的过程分析一文可以知道，当我们选择了ART运行时时，Zygote进程在启动的过程中，会调用libart.so里面的函数JNI_CreateJavaVM来创建一个ART虚拟机。函数JNI_CreateJavaVM的实现如下所示：</p>
+<p>  这个函数定义在文件art/runtime/jni_internal.cc中。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">extern &quot;C&quot; jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args) &#123;</span><br><span class="line">  const JavaVMInitArgs* args = static_cast&lt;JavaVMInitArgs*&gt;(vm_args);</span><br><span class="line">  if (IsBadJniVersion(args-&gt;version)) &#123;</span><br><span class="line">    LOG(ERROR) &lt;&lt; &quot;Bad JNI version passed to CreateJavaVM: &quot; &lt;&lt; args-&gt;version;</span><br><span class="line">    return JNI_EVERSION;</span><br><span class="line">  &#125;</span><br><span class="line">  Runtime::Options options;</span><br><span class="line">  for (int i = 0; i &lt; args-&gt;nOptions; ++i) &#123;</span><br><span class="line">    JavaVMOption* option = &amp;args-&gt;options[i];</span><br><span class="line">    options.push_back(std::make_pair(std::string(option-&gt;optionString), option-&gt;extraInfo));</span><br><span class="line">  &#125;</span><br><span class="line">  bool ignore_unrecognized = args-&gt;ignoreUnrecognized;</span><br><span class="line">  if (!Runtime::Create(options, ignore_unrecognized)) &#123;</span><br><span class="line">    return JNI_ERR;</span><br><span class="line">  &#125;</span><br><span class="line">  Runtime* runtime = Runtime::Current();</span><br><span class="line">  bool started = runtime-&gt;Start();</span><br><span class="line">  if (!started) &#123;</span><br><span class="line">    delete Thread::Current()-&gt;GetJniEnv();</span><br><span class="line">    delete runtime-&gt;GetJavaVM();</span><br><span class="line">    LOG(WARNING) &lt;&lt; &quot;CreateJavaVM failed&quot;;</span><br><span class="line">    return JNI_ERR;</span><br><span class="line">  &#125;</span><br><span class="line">  *p_env = Thread::Current()-&gt;GetJniEnv();</span><br><span class="line">  *p_vm = runtime-&gt;GetJavaVM();</span><br><span class="line">  return JNI_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2018/11/07/Android运行时ART加载OAT文件的过程分析/20140924020914024.png" alt="20140924020914024"></p>
+<p>​    首先是根据类签名信息从包含在OAT文件里面的DEX文件中查找目标Class的编号，然后再根据这个编号找到在OAT文件中找到对应的OatClass。接下来再根据方法签名从包含在OAT文件里面的DEX文件中查找目标方法的编号，然后再根据这个编号在前面找到的OatClass中找到对应的OatMethod。有了这个OatMethod之后，我们就根据它的成员变量begin_和code_offset_找到目标类方法的本地机器指令了。其中，从DEX文件中根据签名找到类和方法的编号要求对DEX文件进行解析，这就需要利用Dalvik虚拟机的知识了。</p>
+<p>看不懂，先不看了。。。</p>
+<p>原文：<a href="https://blog.csdn.net/Luoshengyang/article/details/39307813" target="_blank" rel="noopener">https://blog.csdn.net/Luoshengyang/article/details/39307813</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/ART/" rel="tag"># ART</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/07/Android运行时ART简要介绍/" rel="next" title="Android运行时ART简要介绍">
+                <i class="fa fa-chevron-left"></i> Android运行时ART简要介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/07/Android首次启动时间长优化之预编译提取Odex/" rel="prev" title="Android首次启动时间长优化之预编译提取Odex">
+                Android首次启动时间长优化之预编译提取Odex <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
