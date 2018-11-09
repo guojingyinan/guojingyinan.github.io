@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android SystemServer,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在平时的android开发中，我们经常会通过Context来获取系统服务，比如ActivityManagerService,AccountManagerService等系统服务，今天我们就来看下getSystemService(String name)的整个调用流程。 1.找到Context的实现类打开Context类,可以看到Context是一个抽象类，那么getSystemService一定是">
+<meta name="keywords" content="Android SystemServer">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android中getSystemService流程">
+<meta property="og:url" content="http://yoursite.com/2018/07/23/Android中getSystemService流程/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="在平时的android开发中，我们经常会通过Context来获取系统服务，比如ActivityManagerService,AccountManagerService等系统服务，今天我们就来看下getSystemService(String name)的整个调用流程。 1.找到Context的实现类打开Context类,可以看到Context是一个抽象类，那么getSystemService一定是">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-09T09:06:11.946Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android中getSystemService流程">
+<meta name="twitter:description" content="在平时的android开发中，我们经常会通过Context来获取系统服务，比如ActivityManagerService,AccountManagerService等系统服务，今天我们就来看下getSystemService(String name)的整个调用流程。 1.找到Context的实现类打开Context类,可以看到Context是一个抽象类，那么getSystemService一定是">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/07/23/Android中getSystemService流程/">
+
+
+
+
+
+  <title>Android中getSystemService流程 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/23/Android中getSystemService流程/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android中getSystemService流程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-23T17:02:45+08:00">
+                2018-07-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在平时的android开发中，我们经常会通过Context来获取系统服务，比如ActivityManagerService,AccountManagerService等系统服务，今天我们就来看下getSystemService(String name)的整个调用流程。</p>
+<h4 id="1-找到Context的实现类"><a href="#1-找到Context的实现类" class="headerlink" title="1.找到Context的实现类"></a>1.找到Context的实现类</h4><p>打开Context类,可以看到Context是一个抽象类，那么getSystemService一定是在其实现类来调用的，具体我们都猜得到ContextImpl</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Context &#123;</span><br><span class="line">  ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为什么是ContextImpl呢？我们都知道当我们启动一个Activity的时候，其实是在ActivityThread performLaunchActivity方法中启动的，这一点可以参考上一篇文章” Activity启动流程 “,一个Activity的入口是<br>ActivityThread的main方法，看下main方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">        .......</span><br><span class="line">        // 主线程消息循环</span><br><span class="line">        Looper.prepareMainLooper();</span><br><span class="line"></span><br><span class="line">        ActivityThread thread = new ActivityThread();</span><br><span class="line">        thread.attach(false);</span><br><span class="line"></span><br><span class="line">        if (sMainThreadHandler == null) &#123;</span><br><span class="line">            sMainThreadHandler = thread.getHandler();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Looper.loop();</span><br><span class="line"></span><br><span class="line">        throw new RuntimeException(&quot;Main thread loop unexpectedly exited&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到上面在main方法中，调用了自身的attach方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">private void attach(boolean system) &#123;</span><br><span class="line"></span><br><span class="line">        ........</span><br><span class="line">        if (!system) &#123;</span><br><span class="line">           final IActivityManager mgr = ActivityManagerNative.getDefault();</span><br><span class="line">            try &#123;</span><br><span class="line">                // 通过binder获取到的ActivityManagerService关联当前mAppThread</span><br><span class="line">                mgr.attachApplication(mAppThread);</span><br><span class="line">            &#125; catch (RemoteException ex) &#123;</span><br><span class="line">                // Ignore</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到在main方法中，通过调用activityThread的attach方法，并且参数为false，表示非系统应用，会通过binder与<br>ActivityManagerService通信，并且最后会调用performLaunchActivity方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) &#123;</span><br><span class="line"></span><br><span class="line">        Activity activity = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            java.lang.ClassLoader cl = r.packageInfo.getClassLoader();</span><br><span class="line">            activity = mInstrumentation.newActivity(</span><br><span class="line">                    cl, component.getClassName(), r.intent);</span><br><span class="line">            r.intent.setExtrasClassLoader(cl);</span><br><span class="line">            r.intent.prepareToEnterProcess();</span><br><span class="line">            if (r.state != null) &#123;</span><br><span class="line">                r.state.setClassLoader(cl);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            ....</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            Application app = r.packageInfo.makeApplication(false, mInstrumentation);</span><br><span class="line"></span><br><span class="line">            if (activity != null) &#123;</span><br><span class="line">                // 创建Context的实例</span><br><span class="line">                Context appContext = createBaseContextForActivity(r, activity);</span><br><span class="line">                activity.attach(appContext, this, getInstrumentation(), r.token,</span><br><span class="line">                        r.ident, app, r.intent, r.activityInfo, title, r.parent,</span><br><span class="line">                        r.embeddedID, r.lastNonConfigurationInstances, config,</span><br><span class="line">                        r.referrer, r.voiceInteractor);</span><br><span class="line"></span><br><span class="line">                .......</span><br><span class="line">            &#125;</span><br><span class="line">            r.paused = true;</span><br><span class="line"></span><br><span class="line">            mActivities.put(r.token, r);</span><br><span class="line"></span><br><span class="line">        &#125; catch (SuperNotCalledException e) &#123;</span><br><span class="line">            .....</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return activity;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到创建Context的具体实现是在ActivityThread#createBaseContextForActivity方法中完成的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private Context createBaseContextForActivity(ActivityClientRecord r, final Activity activity) &#123;</span><br><span class="line">        // 可以看到这里创建的具体实例是ContextImpl</span><br><span class="line">        ContextImpl appContext = ContextImpl.createActivityContext(</span><br><span class="line">                this, r.packageInfo, displayId, r.overrideConfig);</span><br><span class="line">        appContext.setOuterContext(activity);</span><br><span class="line">        Context baseContext = appContext;</span><br><span class="line">        ......</span><br><span class="line">        return baseContext;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好了，到现在位置我们可以看到Context的实现类就是ContextImpl，那么关于getSystemService的具体实现也应该在ContextImpl里面了。</p>
+<h4 id="2-getSystemService的具体实现"><a href="#2-getSystemService的具体实现" class="headerlink" title="2.getSystemService的具体实现"></a>2.getSystemService的具体实现</h4><p>ContextImpl#getSystemService的实现如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Object getSystemService(String name) &#123;</span><br><span class="line">    return SystemServiceRegistry.getSystemService(this, name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到实际上ContextImpl也是通过SystemServiceRegistry.getSystemService来获取具体的服务，那么下面看看SystemServiceRegistry.getSystemService</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public static Object getSystemService(ContextImpl ctx, String name) &#123;</span><br><span class="line">        ServiceFetcher&lt;?&gt; fetcher = SYSTEM_SERVICE_FETCHERS.get(name);</span><br><span class="line">        return fetcher != null ? fetcher.getService(ctx) : null;</span><br><span class="line">&#125;</span><br><span class="line"> private static final HashMap&lt;String, ServiceFetcher&lt;?&gt;&gt; SYSTEM_SERVICE_FETCHERS =</span><br><span class="line">            new HashMap&lt;String, ServiceFetcher&lt;?&gt;&gt;();</span><br></pre></td></tr></table></figure>
+<p>可看到实际上获取系统服务是通过ServiceFetcher的getService来获取的，并且SYSTEM_SERVICE_FETCHERS实际上就是一个Map实例，所以肯定是通过put方法为它赋值的。通过搜索，我们发现只有一个地方在做put操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">private static &lt;T&gt; void registerService(String serviceName, Class&lt;T&gt; serviceClass,</span><br><span class="line">            ServiceFetcher&lt;T&gt; serviceFetcher) &#123;</span><br><span class="line">        SYSTEM_SERVICE_NAMES.put(serviceClass, serviceName);</span><br><span class="line">        SYSTEM_SERVICE_FETCHERS.put(serviceName, serviceFetcher);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>顾名思义，这个方法是用来注册系统服务的，当注册系统服务的时候，就会调用到SYSTEM_SERVICE_FETCHERS.put(serviceName, serviceFetcher);将当前的服务put到SYSTEM_SERVICE_NAMES集合中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">static abstract interface ServiceFetcher&lt;T&gt; &#123;</span><br><span class="line">        T getService(ContextImpl ctx);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ServiceFetcher是一个接口，又三个实现类：CachedServiceFetcher,StaticServiceFetcher,StaticOuterContextServiceFetcher,具体不同的服务可能对应不同的实现类</p>
+<p>这些系统服务都是在SystemServiceRegistry的static静态代码块中进行注册的，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">static &#123;</span><br><span class="line">.....</span><br><span class="line">        registerService(Context.ACCOUNT_SERVICE, AccountManager.class,</span><br><span class="line">                new CachedServiceFetcher&lt;AccountManager&gt;() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public AccountManager createService(ContextImpl ctx) &#123;</span><br><span class="line">                IBinder b = ServiceManager.getService(Context.ACCOUNT_SERVICE);</span><br><span class="line">                IAccountManager service = IAccountManager.Stub.asInterface(b);</span><br><span class="line">                return new AccountManager(ctx, service);</span><br><span class="line">            &#125;&#125;);</span><br><span class="line"></span><br><span class="line">        registerService(Context.ACTIVITY_SERVICE, ActivityManager.class,</span><br><span class="line">                new CachedServiceFetcher&lt;ActivityManager&gt;() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public ActivityManager createService(ContextImpl ctx) &#123;</span><br><span class="line">                return new ActivityManager(ctx.getOuterContext(), ctx.mMainThread.getHandler());</span><br><span class="line">            &#125;&#125;);</span><br><span class="line">.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里，我们以ActivityManagerService为例来进行学习。在注册该服务的时候，将Context.ACTIVITY_SERVICE作为键，将CachedServiceFetcher作为值，并且重写了createService方法，createService是在当前ServiceFetcher的<br>getService里执行的，这里会返回一个ActivityManager的实例，ctx.mMainThread.getHandler()就是ActivityThread中的H，在”activity 启动流程”一文，我们已经知道了，启动activity最终就会通过ActivityThread$H的handleMessage进行处理，实际上，包括service的启动以及Broadcast的处理都是在H里处理的，这个后面会细说。</p>
+<h4 id="3-在SystemServer中启动系统服务"><a href="#3-在SystemServer中启动系统服务" class="headerlink" title="3.在SystemServer中启动系统服务"></a>3.在SystemServer中启动系统服务</h4><p>我们知道android系统第一次开机的时候，会通过ZygoteInit来启动SystemServer，简单看下ZygoteInit#main方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String argv[]) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            boolean startSystemServer = false;</span><br><span class="line">            for (int i = 1; i &lt; argv.length; i++) &#123;</span><br><span class="line">                // 通过系统传递过来的命令来判断是否需要启动运行SystemServer类</span><br><span class="line">                if (&quot;start-system-server&quot;.equals(argv[i])) &#123;</span><br><span class="line">                    startSystemServer = true;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (startSystemServer) &#123;</span><br><span class="line">                // 启动运行SystemServer类</span><br><span class="line">                startSystemServer(abiList, socketName);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时会执行SystemServer的main方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">      new SystemServer().run();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>比较简单，内部运行自身的run方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">private void run() &#123;</span><br><span class="line">        // 如果当前系统时间小于1970年,则设置为1970</span><br><span class="line">        if (System.currentTimeMillis() &lt; EARLIEST_SUPPORTED_TIME) &#123;</span><br><span class="line">            SystemClock.setCurrentTimeMillis(EARLIEST_SUPPORTED_TIME);</span><br><span class="line">        &#125;</span><br><span class="line">        // 设置默认的语言和地区</span><br><span class="line">        if (!SystemProperties.get(&quot;persist.sys.language&quot;).isEmpty()) &#123;</span><br><span class="line">            final String languageTag = Locale.getDefault().toLanguageTag();</span><br><span class="line"></span><br><span class="line">            SystemProperties.set(&quot;persist.sys.locale&quot;, languageTag);</span><br><span class="line">            SystemProperties.set(&quot;persist.sys.language&quot;, &quot;&quot;);</span><br><span class="line">            SystemProperties.set(&quot;persist.sys.country&quot;, &quot;&quot;);</span><br><span class="line">            SystemProperties.set(&quot;persist.sys.localevar&quot;, &quot;&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Mmmmmm... more memory!</span><br><span class="line">        VMRuntime.getRuntime().clearGrowthLimit();</span><br><span class="line"></span><br><span class="line">        // The system server has to run all of the time, so it needs to be</span><br><span class="line">        // as efficient as possible with its memory usage.</span><br><span class="line">        VMRuntime.getRuntime().setTargetHeapUtilization(0.8f);</span><br><span class="line"></span><br><span class="line">        // Prepare the main looper thread (this thread).</span><br><span class="line">        android.os.Process.setThreadPriority(</span><br><span class="line">                android.os.Process.THREAD_PRIORITY_FOREGROUND);</span><br><span class="line">        android.os.Process.setCanSelfBackground(false);</span><br><span class="line">        Looper.prepareMainLooper();</span><br><span class="line"></span><br><span class="line">        // Initialize native services.</span><br><span class="line">        System.loadLibrary(&quot;android_servers&quot;);</span><br><span class="line"></span><br><span class="line">        // Check whether we failed to shut down last time we tried.</span><br><span class="line">        // This call may not return.</span><br><span class="line">        performPendingShutdown();</span><br><span class="line"></span><br><span class="line">        // Initialize the system context.</span><br><span class="line">        createSystemContext();</span><br><span class="line"></span><br><span class="line">        // Create the system service manager.</span><br><span class="line">        mSystemServiceManager = new SystemServiceManager(mSystemContext);</span><br><span class="line">        LocalServices.addService(SystemServiceManager.class, mSystemServiceManager);</span><br><span class="line"></span><br><span class="line">        // 启动服务</span><br><span class="line">        try &#123;</span><br><span class="line">            startBootstrapServices();</span><br><span class="line">            startCoreServices();</span><br><span class="line">            startOtherServices();</span><br><span class="line">        &#125; catch (Throwable ex) &#123;</span><br><span class="line">            throw ex;</span><br><span class="line">        &#125;</span><br><span class="line">        // Loop forever.</span><br><span class="line">        Looper.loop();</span><br><span class="line">        throw new RuntimeException(&quot;Main thread loop unexpectedly exited&quot;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>在上面的run方法中，和service相关的操作主要就是通过下面的方法启动：开机，核心，以及其他服务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">startBootstrapServices();</span><br><span class="line">startCoreServices();</span><br><span class="line">startOtherServices();</span><br></pre></td></tr></table></figure>
+<p>其实在这个三个start服务中，不止启动系统服务，还会将这些服务和ServiceManager进行关联，以方便ServiceManager的管理<br>比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ServiceManager.addService(Context.INPUT_SERVICE, inputManager);</span><br></pre></td></tr></table></figure>
+<p>好了，到这里为止，getSystemService的流程就走完了</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android-SystemServer/" rel="tag"># Android SystemServer</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/21/Android-Activity启动流程/" rel="next" title="Android Activity启动流程">
+                <i class="fa fa-chevron-left"></i> Android Activity启动流程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/07/Android运行时ART简要介绍/" rel="prev" title="Android运行时ART简要介绍">
+                Android运行时ART简要介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-找到Context的实现类"><span class="nav-number">1.</span> <span class="nav-text">1.找到Context的实现类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-getSystemService的具体实现"><span class="nav-number">2.</span> <span class="nav-text">2.getSystemService的具体实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-在SystemServer中启动系统服务"><span class="nav-number">3.</span> <span class="nav-text">3.在SystemServer中启动系统服务</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

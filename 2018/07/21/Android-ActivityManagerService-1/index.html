@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,AMS,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在Android系统中，ActivityManagerService即AMS是管理Android四大组件的核心，其重要性不言而喻。那么，从本篇文章就开始分析AMS的源码，理解其内部的逻辑。 ActivityManagerService对象的创建Android系统启动SystemServer这里已经讲了，ActivityManagerService最初的创建位置在SystemServer的start">
+<meta name="keywords" content="Android,AMS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android ActivityManagerService(1)">
+<meta property="og:url" content="http://yoursite.com/2018/07/21/Android-ActivityManagerService-1/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="在Android系统中，ActivityManagerService即AMS是管理Android四大组件的核心，其重要性不言而喻。那么，从本篇文章就开始分析AMS的源码，理解其内部的逻辑。 ActivityManagerService对象的创建Android系统启动SystemServer这里已经讲了，ActivityManagerService最初的创建位置在SystemServer的start">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-08T04:11:57.976Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android ActivityManagerService(1)">
+<meta name="twitter:description" content="在Android系统中，ActivityManagerService即AMS是管理Android四大组件的核心，其重要性不言而喻。那么，从本篇文章就开始分析AMS的源码，理解其内部的逻辑。 ActivityManagerService对象的创建Android系统启动SystemServer这里已经讲了，ActivityManagerService最初的创建位置在SystemServer的start">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/07/21/Android-ActivityManagerService-1/">
+
+
+
+
+
+  <title>Android ActivityManagerService(1) | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/21/Android-ActivityManagerService-1/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android ActivityManagerService(1)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-21T14:59:40+08:00">
+                2018-07-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/ActivityManager/" itemprop="url" rel="index">
+                    <span itemprop="name">ActivityManager</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在Android系统中，<code>ActivityManagerService</code>即<code>AMS</code>是管理Android四大组件的核心，其重要性不言而喻。那么，从本篇文章就开始分析<code>AMS</code>的源码，理解其内部的逻辑。</p>
+<h5 id="ActivityManagerService对象的创建"><a href="#ActivityManagerService对象的创建" class="headerlink" title="ActivityManagerService对象的创建"></a>ActivityManagerService对象的创建</h5><p>Android系统启动SystemServer这里已经讲了，<code>ActivityManagerService</code>最初的创建位置在<code>SystemServer</code>的<code>startBootstrapServices</code>方法内。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/servces/java/com/android/server/SystemServer.java</span><br><span class="line">private void startBootstrapServices() &#123;</span><br><span class="line">    Installer installer = mSystemServiceManager.startService(Installer.class);</span><br><span class="line">    // Activity manager runs the show.</span><br><span class="line">    mActivityManagerService = mSystemServiceManager.startService(</span><br><span class="line">    ActivityManagerService.Lifecycle.class).getService();</span><br><span class="line">    mActivityManagerService.setSystemServiceManager(mSystemServiceManager);</span><br><span class="line">    mActivityManagerService.setInstaller(installer);</span><br><span class="line">    </span><br><span class="line">    // 为系统进程创建并启动Application实例</span><br><span class="line">    mActivityManagerService.setSystemProcess();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该方法表示通过SystemServiceManager的startService方法，启动Lifecycle后获取服务。然后为系统进程创建并启动Application实例。<br>　　Lifecycle是ActivityManagerService的内部静态类。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public static final class Lifecycle extends SystemService &#123;</span><br><span class="line">    private final ActivityManagerService mService;</span><br><span class="line"></span><br><span class="line">    public Lifecycle(Context context) &#123;</span><br><span class="line">        super(context);</span><br><span class="line">        mService = new ActivityManagerService(context);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void onStart() &#123;</span><br><span class="line">        mService.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public ActivityManagerService getService() &#123;</span><br><span class="line">        return mService;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出Lifecycle类的作用，就是在ActivityManagerSerivce与SystemService之间充当适配器的作用。<br>　　再回头看一下SystemServiceManager的startService方法做了什么。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/services/core/java/com/android/server/SystemServiceManager.java</span><br><span class="line">public &lt;T extends SystemService&gt; T startService(Class&lt;T&gt; serviceClass) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        final String name = serviceClass.getName();</span><br><span class="line">        Slog.i(TAG, &quot;Starting &quot; + name);</span><br><span class="line">        Trace.traceBegin(Trace.TRACE_TAG_SYSTEM_SERVER, &quot;StartService &quot; + name);</span><br><span class="line"></span><br><span class="line">        // Create the service.</span><br><span class="line">        if (!SystemService.class.isAssignableFrom(serviceClass)) &#123;</span><br><span class="line">            throw new RuntimeException(&quot;Failed to create &quot; + name</span><br><span class="line">                    + &quot;: service must extend &quot; + SystemService.class.getName());</span><br><span class="line">        &#125;</span><br><span class="line">        final T service;</span><br><span class="line">        Constructor&lt;T&gt; constructor = serviceClass.getConstructor(Context.class);</span><br><span class="line">        service = constructor.newInstance(mContext);</span><br><span class="line">        // Register it.</span><br><span class="line">        mServices.add(service);</span><br><span class="line"></span><br><span class="line">        // Start it.</span><br><span class="line">        service.onStart();</span><br><span class="line">        return service;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        Trace.traceEnd(Trace.TRACE_TAG_SYSTEM_SERVER);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里通过构造器创建一个SystemService的子类实例，这里即Lifecycle类的实例，再调用service.onStart()方法。<br>　　在Lifecycle的构造方法中，会根据传入的Context参数创建一个ActivityManagerService对象。那我们看一下ActivityManagerService的构造方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/servces/core/java/com/android/server/am/ActivityManagerService.java</span><br><span class="line"></span><br><span class="line">public ActivityManagerService(Context systemContext) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mInjector = new Injector();</span><br><span class="line">    mContext = systemContext;</span><br><span class="line"></span><br><span class="line">    mFactoryTest = FactoryTest.getMode();</span><br><span class="line">    mSystemThread = ActivityThread.currentActivityThread();</span><br><span class="line">    mUiContext = mSystemThread.getSystemUiContext();</span><br><span class="line">    ...</span><br><span class="line">    // 创建名为ActivityManagerService的前台线程</span><br><span class="line">    mHandlerThread = new ServiceThread(TAG, THREAD_PRIORITY_FOREGROUND, false /*allowIo*/);</span><br><span class="line">    mHandlerThread.start();</span><br><span class="line">    mHandler = new MainHandler(mHandlerThread.getLooper());</span><br><span class="line">    // 创建UI线程</span><br><span class="line">    mUiHandler = mInjector.getUiHandler(this);</span><br><span class="line">    ...</span><br><span class="line">    // 创建前台广播队列和后台广播队列</span><br><span class="line">    mFgBroadcastQueue = new BroadcastQueue(this, mHandler, &quot;foreground&quot;, BROADCAST_FG_TIMEOUT, false);</span><br><span class="line">    mBgBroadcastQueue = new BroadcastQueue(this, mHandler, &quot;background&quot;, BROADCAST_BG_TIMEOUT, true);</span><br><span class="line">    mBroadcastQueues[0] = mFgBroadcastQueue;</span><br><span class="line">    mBroadcastQueues[1] = mBgBroadcastQueue;</span><br><span class="line">    ...</span><br><span class="line">    // 创建&quot;/data/system&quot;目录</span><br><span class="line">    File dataDir = Environment.getDataDirectory();</span><br><span class="line">    File systemDir = new File(dataDir, &quot;system&quot;);</span><br><span class="line">    systemDir.mkdirs();</span><br><span class="line">    ...</span><br><span class="line">    // 所有Activity的启动都要通过mStackSupervisor执行</span><br><span class="line">    mStackSupervisor = new ActivityStackSupervisor(this);</span><br><span class="line">    mActivityStarter = new ActivityStarter(this, mStackSupervisor);</span><br><span class="line">    ...</span><br><span class="line">    mProcessCpuThread = new Thread(&quot;CpuTracker&quot;) &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            synchronized (mProcessCpuTracker) &#123;</span><br><span class="line">                mProcessCpuInitLatch.countDown();</span><br><span class="line">                mProcessCpuTracker.init();</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　ActivityManagerService的构造方法创建了ActivityManagerService线程、UI线程和CpuTracker线程，同时创建了系统目录以及用于创建Activity的StackSupervisor和ActivityStarter。<br>　　到这里，ActivityManagerService对象就创建完毕。</p>
+<h5 id="ActivityManagerService对象创建后操作"><a href="#ActivityManagerService对象创建后操作" class="headerlink" title="ActivityManagerService对象创建后操作"></a>ActivityManagerService对象创建后操作</h5><p>下面我们再看一下startService(SystemService)方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// \frameworks\base\services\core\java\com\android\server\SystemServiceManager.java</span><br><span class="line">public &lt;T extends SystemService&gt; T startService(Class&lt;T&gt; serviceClass) &#123;</span><br><span class="line">	...</span><br><span class="line">    // Register it.</span><br><span class="line">    mServices.add(service);</span><br><span class="line"></span><br><span class="line">    // Start it.</span><br><span class="line">    try &#123;</span><br><span class="line">    	service.onStart();</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法主要做了两件事情，一个是注册服务，另一个就是启动服务。而<code>Lifecycle</code>的<code>onStart</code>方法中又会调用<code>ActivityManagerService</code>的<code>start</code>方法，下面跟踪一下该方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private void start() &#123;</span><br><span class="line">    Process.removeAllProcessGroups();</span><br><span class="line">    // 启动CpuTracker线程</span><br><span class="line">    mProcessCpuThread.start();</span><br><span class="line">    mBatteryStatsService.publish(mContext);</span><br><span class="line">    mAppOpsService.publish(mContext);</span><br><span class="line">    Slog.d(&quot;AppOps&quot;, &quot;AppOpsService published&quot;);</span><br><span class="line">    LocalServices.addService(ActivityManagerInternal.class, new LocalService());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到这里，<code>ActivityManagerService</code>就已经创建起来了。</p>
+<p>我们再回到<code>SystemServer</code>的<code>startBootstrapServices</code>方法中，在创建了<code>ActivityManagerService</code>后，又调用了其<code>setSystemProcess</code>方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// 为系统进程创建并启动Application实例</span><br><span class="line">mActivityManagerService.setSystemProcess();</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">public void setSystemProcess() &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        ServiceManager.addService(Context.ACTIVITY_SERVICE, this, true);</span><br><span class="line">        ServiceManager.addService(ProcessStats.SERVICE_NAME, mProcessStats);</span><br><span class="line">        ServiceManager.addService(&quot;meminfo&quot;, new MemBinder(this));</span><br><span class="line">        ServiceManager.addService(&quot;gfxinfo&quot;, new GraphicsBinder(this));</span><br><span class="line">        ServiceManager.addService(&quot;dbinfo&quot;, new DbBinder(this));</span><br><span class="line">        if (MONITOR_CPU_USAGE) &#123;</span><br><span class="line">            ServiceManager.addService(&quot;cpuinfo&quot;, new CpuBinder(this));</span><br><span class="line">        &#125;</span><br><span class="line">        ServiceManager.addService(&quot;permission&quot;, new PermissionController(this));</span><br><span class="line">        ServiceManager.addService(&quot;processinfo&quot;, new ProcessInfoService(this));</span><br><span class="line"></span><br><span class="line">        ApplicationInfo info = mContext.getPackageManager().getApplicationInfo(</span><br><span class="line">                &quot;android&quot;, STOCK_PM_FLAGS | MATCH_SYSTEM_ONLY);</span><br><span class="line">        mSystemThread.installSystemApplicationInfo(info, getClass().getClassLoader());</span><br><span class="line"></span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            ProcessRecord app = newProcessRecordLocked(info, info.processName, false, 0);</span><br><span class="line">            app.persistent = true;</span><br><span class="line">            app.pid = MY_PID;</span><br><span class="line">            app.maxAdj = ProcessList.SYSTEM_ADJ;</span><br><span class="line">            app.makeActive(mSystemThread.getApplicationThread(), mProcessStats);</span><br><span class="line">            synchronized (mPidsSelfLocked) &#123;</span><br><span class="line">                mPidsSelfLocked.put(app.pid, app);</span><br><span class="line">            &#125;</span><br><span class="line">            updateLruProcessLocked(app, false, null);</span><br><span class="line">            updateOomAdjLocked();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该方法的主要作用是为系统进程创建并启动Application实例并启动，同时也注册一些服务。<br>　　现在我们再回头看一下<code>SystemServer</code>调用<code>startBootstrapServices</code>方法的地方。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/servces/java/com/android/server/SystemServer.java</span><br><span class="line"></span><br><span class="line">// zygote的主进入点</span><br><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    new SystemServer().run();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void run() &#123;</span><br><span class="line">    ...</span><br><span class="line">    try &#123;</span><br><span class="line">        traceBeginAndSlog(&quot;StartServices&quot;);</span><br><span class="line">        startBootstrapServices();</span><br><span class="line">        startCoreServices();</span><br><span class="line">        startOtherServices();</span><br><span class="line">        SystemServerInitThreadPool.shutdown();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在执行了<code>startBootstrapServices</code>方法后，又接着调用了<code>startCoreServices</code>方法和<code>startOtherServices</code>方法。这两个方法用于启动一些在<code>startBootstrapServices</code>方法内没有启动的必要服务和其他各种服务。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/servces/java/com/android/server/SystemServer.java</span><br><span class="line"></span><br><span class="line">private void startCoreServices() &#123;</span><br><span class="line">    ...</span><br><span class="line">    // 检测应用统计    mActivityManagerService.setUsageStatsManager(LocalServices.getService(UsageStatsManagerInternal.class));</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void startOtherServices() &#123;</span><br><span class="line">    ...</span><br><span class="line">    mActivityManagerService.installSystemProviders();</span><br><span class="line">    ...</span><br><span class="line">    final Watchdog watchdog = Watchdog.getInstance();</span><br><span class="line">    watchdog.init(context, mActivityManagerService);</span><br><span class="line">    ...</span><br><span class="line">    // 通知ActivityManagerService</span><br><span class="line">    mActivityManagerService.systemReady(() -&gt; &#123;</span><br><span class="line">        ...</span><br><span class="line">        mSystemServiceManager.startBootPhase(SystemService.PHASE_ACTIVITY_MANAGER_READY);</span><br><span class="line">        ...</span><br><span class="line">        try &#123;</span><br><span class="line">            mActivityManagerService.startObservingNativeCrashes();</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        try &#123;</span><br><span class="line">            startSystemUi(context, windowManagerF);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        // 通知若干系统服务systemReady</span><br><span class="line">        ...</span><br><span class="line">        // 启动Watchdog</span><br><span class="line">        Watchdog.getInstance().start();</span><br><span class="line">        ...</span><br><span class="line">        // 通知若干系统服务systemRunning</span><br><span class="line">        ...</span><br><span class="line">    &#125;, BOOT_TIMINGS_TRACE_LOG);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里调用了<code>ActivityManagerService</code>的<code>systemReady</code>方法，其中的Lambda表达式应为<code>Runnable</code>类型。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/servces/core/java/com/android/server/am/ActivityManagerService.java</span><br><span class="line"></span><br><span class="line">public void systemReady(final Runnable goingCallback, TimingsTraceLog traceLog) &#123;</span><br><span class="line">    synchronized(this) &#123;</span><br><span class="line">        if (mSystemReady) &#123;</span><br><span class="line">            if (goingCallback != null) &#123;</span><br><span class="line">                // 执行回调</span><br><span class="line">                goingCallback.run();</span><br><span class="line">            &#125;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        mLocalDeviceIdleController = LocalServices.getService(DeviceIdleController.LocalService.class);</span><br><span class="line">        mAssistUtils = new AssistUtils(mContext);</span><br><span class="line">        mVrController.onSystemReady();</span><br><span class="line">        mUserController.onSystemReady();</span><br><span class="line">        mRecentTasks.onSystemReadyLocked();</span><br><span class="line">        mAppOpsService.systemReady();</span><br><span class="line">        mSystemReady = true;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // 检查需要kill的进程，并执行kill，且不允许重启</span><br><span class="line">    ArrayList&lt;ProcessRecord&gt; procsToKill = null;</span><br><span class="line">    synchronized(mPidsSelfLocked) &#123;</span><br><span class="line">        for (int i=mPidsSelfLocked.size()-1; i&gt;=0; i--) &#123;</span><br><span class="line">            ProcessRecord proc = mPidsSelfLocked.valueAt(i);</span><br><span class="line">            if (!isAllowedWhileBooting(proc.info))&#123;</span><br><span class="line">                if (procsToKill == null) &#123;</span><br><span class="line">                    procsToKill = new ArrayList&lt;ProcessRecord&gt;();</span><br><span class="line">                &#125;</span><br><span class="line">                procsToKill.add(proc);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    synchronized(this) &#123;</span><br><span class="line">        if (procsToKill != null) &#123;</span><br><span class="line">            for (int i=procsToKill.size()-1; i&gt;=0; i--) &#123;</span><br><span class="line">                ProcessRecord proc = procsToKill.get(i);</span><br><span class="line">                removeProcessLocked(proc, true, false, &quot;system update done&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        mProcessesReady = true;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    retrieveSettings();</span><br><span class="line">    ...</span><br><span class="line">    // 执行回调</span><br><span class="line">    if (goingCallback != null) goingCallback.run();</span><br><span class="line">    ...</span><br><span class="line">    synchronized (this) &#123;</span><br><span class="line">        // 启动持久化进程</span><br><span class="line">        startPersistentApps(PackageManager.MATCH_DIRECT_BOOT_AWARE);</span><br><span class="line">        ...</span><br><span class="line">        // 启动桌面Activity</span><br><span class="line">        startHomeActivityLocked(currentUserId, &quot;systemReady&quot;);</span><br><span class="line">        ...</span><br><span class="line">        try &#123;</span><br><span class="line">            // 发送ACTION_USER_STARTED广播</span><br><span class="line">            Intent intent = new Intent(Intent.ACTION_USER_STARTED);</span><br><span class="line">            intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY | Intent.FLAG_RECEIVER_FOREGROUND);</span><br><span class="line">            intent.putExtra(Intent.EXTRA_USER_HANDLE, currentUserId);</span><br><span class="line">            broadcastIntentLocked(null, null, intent, null, null, 0, null, null, null, AppOpsManager.OP_NONE, null, false, false, MY_PID, SYSTEM_UID, currentUserId);</span><br><span class="line">            // 发送ACTION_USER_STARTING广播</span><br><span class="line">            intent = new Intent(Intent.ACTION_USER_STARTING);</span><br><span class="line">            intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);</span><br><span class="line">            intent.putExtra(Intent.EXTRA_USER_HANDLE, currentUserId);</span><br><span class="line">            broadcastIntentLocked(null, null, intent, null, </span><br><span class="line">                new IIntentReceiver.Stub() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void performReceive(Intent intent, int resultCode, String data, Bundle extras, boolean ordered, boolean sticky, int sendingUser) throws RemoteException &#123;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;, </span><br><span class="line">                0, null, null, new String[] &#123;INTERACT_ACROSS_USERS&#125;, AppOpsManager.OP_NONE, null, true, false, MY_PID, SYSTEM_UID, UserHandle.USER_ALL);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        mStackSupervisor.resumeFocusedStackTopActivityLocked();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该方法可以根据goingCallback.run()的执行时间，分为三个部分。 </p>
+<ol>
+<li>在goingCallback.run()执行之前的主要操作是通知systemReady和杀掉启动时不被允许的进程。 </li>
+<li>goingCallback.run()方法主要用于启动各种系统服务进程 </li>
+<li>在goingCallback.run()执行之后的主要操作是启动持久化进程、启动桌面Activity、发布ACTION_USER_STARTED和ACTION_USER_STARTING广播。</li>
+</ol>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>　　本篇文章主要分析<code>ActivityManagerService</code>的创建和启动逻辑。在后续文章中，会对<code>ActivityManangerService</code>的具体使用，对四大组件进行管理，以及内存管理等内容进行分析。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/AMS/" rel="tag"># AMS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/07/Android-WindowManagerService-2/" rel="next" title="Android WindowManagerService(2)">
+                <i class="fa fa-chevron-left"></i> Android WindowManagerService(2)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/21/Android-Activity启动流程/" rel="prev" title="Android Activity启动流程">
+                Android Activity启动流程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#ActivityManagerService对象的创建"><span class="nav-number">1.</span> <span class="nav-text">ActivityManagerService对象的创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ActivityManagerService对象创建后操作"><span class="nav-number">2.</span> <span class="nav-text">ActivityManagerService对象创建后操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,APK安装,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="PackageInstaller中的处理紧接着上一篇的内容，在PackageInstallerActivity调用startInstallConfirm方法初始化安装确认界面后，这个安装确认界面就会呈现给用户，用户如果想要安装这个应用程序就会点击确定按钮，就会调用PackageInstallerActivity的onClick方法，如下所示。/PackageInstaller/src/com/an">
+<meta name="keywords" content="Android,APK安装">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PackageInstaller安装APK">
+<meta property="og:url" content="http://yoursite.com/2018/06/18/PackageInstaller安装APK/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="PackageInstaller中的处理紧接着上一篇的内容，在PackageInstallerActivity调用startInstallConfirm方法初始化安装确认界面后，这个安装确认界面就会呈现给用户，用户如果想要安装这个应用程序就会点击确定按钮，就会调用PackageInstallerActivity的onClick方法，如下所示。/PackageInstaller/src/com/an">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-08T03:29:08.441Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PackageInstaller安装APK">
+<meta name="twitter:description" content="PackageInstaller中的处理紧接着上一篇的内容，在PackageInstallerActivity调用startInstallConfirm方法初始化安装确认界面后，这个安装确认界面就会呈现给用户，用户如果想要安装这个应用程序就会点击确定按钮，就会调用PackageInstallerActivity的onClick方法，如下所示。/PackageInstaller/src/com/an">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/18/PackageInstaller安装APK/">
+
+
+
+
+
+  <title>PackageInstaller安装APK | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/18/PackageInstaller安装APK/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PackageInstaller安装APK</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-18T20:08:30+08:00">
+                2018-06-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android包管理机制/" itemprop="url" rel="index">
+                    <span itemprop="name">Android包管理机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="PackageInstaller中的处理"><a href="#PackageInstaller中的处理" class="headerlink" title="PackageInstaller中的处理"></a><strong>PackageInstaller中的处理</strong></h3><p>紧接着上一篇的内容，在PackageInstallerActivity调用startInstallConfirm方法初始化安装确认界面后，这个安装确认界面就会呈现给用户，用户如果想要安装这个应用程序就会点击确定按钮，就会调用PackageInstallerActivity的onClick方法，如下所示。<br><code>/PackageInstaller/src/com/android/packageinstaller/PackageInstallerActivity.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public void onClick(View v) &#123;</span><br><span class="line">        if (v == mOk) &#123;</span><br><span class="line">            if (mOk.isEnabled()) &#123;</span><br><span class="line">                if (mOkCanInstall || mScrollView == null) &#123;</span><br><span class="line">                    if (mSessionId != -1) &#123;</span><br><span class="line">                        mInstaller.setPermissionsResult(mSessionId, true);</span><br><span class="line">                        finish();</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        startInstall();//1</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    mScrollView.pageScroll(View.FOCUS_DOWN);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else if (v == mCancel) &#123;</span><br><span class="line">            ...</span><br><span class="line">            finish();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>onClick方法中分别对确定和取消按钮做处理，主要查看对确定按钮的处理，注释1处调用了startInstall方法：<br><code>/PackageInstaller/src/com/android/packageinstaller/PackageInstallerActivity.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">private void startInstall() &#123;</span><br><span class="line">     Intent newIntent = new Intent();</span><br><span class="line">     newIntent.putExtra(PackageUtil.INTENT_ATTR_APPLICATION_INFO,</span><br><span class="line">             mPkgInfo.applicationInfo);</span><br><span class="line">     newIntent.setData(mPackageURI);//1</span><br><span class="line">     newIntent.setClass(this, InstallInstalling.class);</span><br><span class="line">     String installerPackageName = getIntent().getStringExtra(</span><br><span class="line">             Intent.EXTRA_INSTALLER_PACKAGE_NAME);</span><br><span class="line">     if (mOriginatingURI != null) &#123;</span><br><span class="line">         newIntent.putExtra(Intent.EXTRA_ORIGINATING_URI, mOriginatingURI);</span><br><span class="line">     &#125;</span><br><span class="line">     ...</span><br><span class="line">     if(localLOGV) Log.i(TAG, &quot;downloaded app uri=&quot;+mPackageURI);</span><br><span class="line">     startActivity(newIntent);</span><br><span class="line">     finish();</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>startInstall方法用于跳转到InstallInstalling这个Activity，并关闭掉当前的PackageInstallerActivity。InstallInstalling主要用于向包管理器发送包的信息并处理包管理的回调。 InstallInstalling的onCreate方法如下所示。<br><code>/PackageInstaller/src/com/android/packageinstaller/InstallInstalling.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line"> protected void onCreate(@Nullable Bundle savedInstanceState) &#123;</span><br><span class="line">     super.onCreate(savedInstanceState);</span><br><span class="line">     setContentView(R.layout.install_installing);</span><br><span class="line">     ApplicationInfo appInfo = getIntent()</span><br><span class="line">             .getParcelableExtra(PackageUtil.INTENT_ATTR_APPLICATION_INFO);</span><br><span class="line">     mPackageURI = getIntent().getData();</span><br><span class="line">     if (&quot;package&quot;.equals(mPackageURI.getScheme())) &#123;</span><br><span class="line">         try &#123;</span><br><span class="line">             getPackageManager().installExistingPackage(appInfo.packageName);</span><br><span class="line">             launchSuccess();</span><br><span class="line">         &#125; catch (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">             launchFailure(PackageManager.INSTALL_FAILED_INTERNAL_ERROR, null);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125; else &#123;</span><br><span class="line">     //根据mPackageURI创建一个对应的File </span><br><span class="line">         final File sourceFile = new File(mPackageURI.getPath());</span><br><span class="line">         PackageUtil.initSnippetForNewApp(this, PackageUtil.getAppSnippet(this, appInfo,</span><br><span class="line">                 sourceFile), R.id.app_snippet);</span><br><span class="line">         //如果savedInstanceState不为null，获取此前保存的mSessionId和mInstallId       </span><br><span class="line">         if (savedInstanceState != null) &#123;//1</span><br><span class="line">             mSessionId = savedInstanceState.getInt(SESSION_ID);</span><br><span class="line">             mInstallId = savedInstanceState.getInt(INSTALL_ID);</span><br><span class="line">           //向InstallEventReceiver注册一个观察者</span><br><span class="line">             try &#123;</span><br><span class="line">                 InstallEventReceiver.addObserver(this, mInstallId,</span><br><span class="line">                         this::launchFinishBasedOnResult);//2</span><br><span class="line">             &#125; catch (EventResultPersister.OutOfIdsException e) &#123;</span><br><span class="line">      </span><br><span class="line">             &#125;</span><br><span class="line">         &#125; else &#123;</span><br><span class="line">             PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(</span><br><span class="line">                     PackageInstaller.SessionParams.MODE_FULL_INSTALL);//3</span><br><span class="line">             params.referrerUri = getIntent().getParcelableExtra(Intent.EXTRA_REFERRER);</span><br><span class="line">             params.originatingUri = getIntent()</span><br><span class="line">                     .getParcelableExtra(Intent.EXTRA_ORIGINATING_URI);</span><br><span class="line">             params.originatingUid = getIntent().getIntExtra(Intent.EXTRA_ORIGINATING_UID,</span><br><span class="line">                     UID_UNKNOWN);</span><br><span class="line">             File file = new File(mPackageURI.getPath());//4</span><br><span class="line">             try &#123;</span><br><span class="line">                 PackageParser.PackageLite pkg = PackageParser.parsePackageLite(file, 0);//5</span><br><span class="line">                 params.setAppPackageName(pkg.packageName);</span><br><span class="line">                 params.setInstallLocation(pkg.installLocation);</span><br><span class="line">                 params.setSize(</span><br><span class="line">                         PackageHelper.calculateInstalledSize(pkg, false, params.abiOverride));</span><br><span class="line">             &#125; catch (PackageParser.PackageParserException e) &#123;</span><br><span class="line">                ...</span><br><span class="line">             &#125;</span><br><span class="line">             try &#123;</span><br><span class="line">                 mInstallId = InstallEventReceiver</span><br><span class="line">                         .addObserver(this, EventResultPersister.GENERATE_NEW_ID,</span><br><span class="line">                                 this::launchFinishBasedOnResult);//6</span><br><span class="line">             &#125; catch (EventResultPersister.OutOfIdsException e) &#123;</span><br><span class="line">                 launchFailure(PackageManager.INSTALL_FAILED_INTERNAL_ERROR, null);</span><br><span class="line">             &#125;</span><br><span class="line">             try &#123;</span><br><span class="line">                 mSessionId = getPackageManager().getPackageInstaller().createSession(params);//7</span><br><span class="line">             &#125; catch (IOException e) &#123;</span><br><span class="line">                 launchFailure(PackageManager.INSTALL_FAILED_INTERNAL_ERROR, null);</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">          ...</span><br><span class="line">         mSessionCallback = new InstallSessionCallback();</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>onCreate方法中会分别对package和content协议的Uri进行处理，我们来看content协议的Uri处理部分。注释1处如果savedInstanceState不为null，获取此前保存的mSessionId和mInstallId，其中mSessionId是安装包的会话id，mInstallId是等待的安装事件id。注释2处根据mInstallId向InstallEventReceiver注册一个观察者，launchFinishBasedOnResult会接收到安装事件的回调，无论安装成功或者失败都会关闭当前的Activity(InstallInstalling)。如果savedInstanceState为null，代码的逻辑也是类似的，注释3处创建SessionParams，它用来代表安装会话的参数，注释4、5处根据mPackageUri对包（APK）进行轻量级的解析，并将解析的参数赋值给SessionParams。注释6处和注释2处类似向InstallEventReceiver注册一个观察者返回一个新的mInstallId，其中InstallEventReceiver继承自BroadcastReceiver，用于接收安装事件并回调给EventResultPersister。 注释7处PackageInstaller的createSession方法内部会通过IPackageInstaller与PackageInstallerService进行进程间通信，最终调用的是PackageInstallerService的createSession方法来创建并返回mSessionId。<br>InstallInstalling的onCreate方法就分析到这，接着查看InstallInstalling的onResume方法：<br><code>packages/apps/PackageInstaller/src/com/android/packageinstaller/InstallInstalling.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line"> protected void onResume() &#123;</span><br><span class="line">     super.onResume();</span><br><span class="line">     if (mInstallingTask == null) &#123;</span><br><span class="line">         PackageInstaller installer = getPackageManager().getPackageInstaller();</span><br><span class="line">         PackageInstaller.SessionInfo sessionInfo = installer.getSessionInfo(mSessionId);//1</span><br><span class="line">         if (sessionInfo != null &amp;&amp; !sessionInfo.isActive()) &#123;//2</span><br><span class="line">             mInstallingTask = new InstallingAsyncTask();</span><br><span class="line">             mInstallingTask.execute();</span><br><span class="line">         &#125; else &#123;</span><br><span class="line">             mCancelButton.setEnabled(false);</span><br><span class="line">             setFinishOnTouchOutside(false);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处根据mSessionId得到SessionInfo，SessionInfo代表安装会话的详细信息。注释2处如果sessionInfo不为Null并且不是活动的，就创建并执行InstallingAsyncTask。InstallingAsyncTask的doInBackground方法中会根据包(APK)的Uri，将APK的信息通过IO流的形式写入到PackageInstaller.Session中。InstallingAsyncTask的onPostExecute方法如下所示。<br><code>packages/apps/PackageInstaller/src/com/android/packageinstaller/InstallInstalling.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line"> protected void onPostExecute(PackageInstaller.Session session) &#123;</span><br><span class="line">     if (session != null) &#123;</span><br><span class="line">         Intent broadcastIntent = new Intent(BROADCAST_ACTION);</span><br><span class="line">         broadcastIntent.setPackage(</span><br><span class="line">                 getPackageManager().getPermissionControllerPackageName());</span><br><span class="line">         broadcastIntent.putExtra(EventResultPersister.EXTRA_ID, mInstallId);</span><br><span class="line">         PendingIntent pendingIntent = PendingIntent.getBroadcast(</span><br><span class="line">                 InstallInstalling.this,</span><br><span class="line">                 mInstallId,</span><br><span class="line">                 broadcastIntent,</span><br><span class="line">                 PendingIntent.FLAG_UPDATE_CURRENT);</span><br><span class="line">         session.commit(pendingIntent.getIntentSender());//1</span><br><span class="line">         mCancelButton.setEnabled(false);</span><br><span class="line">         setFinishOnTouchOutside(false);</span><br><span class="line">     &#125; else &#123;</span><br><span class="line">         getPackageManager().getPackageInstaller().abandonSession(mSessionId);</span><br><span class="line">         if (!isCancelled()) &#123;</span><br><span class="line">             launchFailure(PackageManager.INSTALL_FAILED_INVALID_APK, null);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>创建了一个PendingIntent，并将该PendingIntent的IntentSender通过注释1处的PackageInstaller.Session的commit方法发送出去，发送去哪了呢？接着查看PackageInstaller.Session的commit方法。<br><code>frameworks/base/core/java/android/content/pm/PackageInstaller.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public void commit(@NonNull IntentSender statusReceiver) &#123;</span><br><span class="line">           try &#123;</span><br><span class="line">               mSession.commit(statusReceiver);</span><br><span class="line">           &#125; catch (RemoteException e) &#123;</span><br><span class="line">               throw e.rethrowFromSystemServer();</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+<p>mSession的类型为IPackageInstallerSession，这说明要通过IPackageInstallerSession来进行进程间的通信，最终会调用PackageInstallerSession的commit方法，这样代码逻辑就到了Java框架层的。</p>
+<h3 id="Java框架层的处理"><a href="#Java框架层的处理" class="headerlink" title="Java框架层的处理"></a><strong>Java框架层的处理</strong></h3><p><code>frameworks/base/services/core/java/com/android/server/pm/PackageInstallerSession.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public void commit(IntentSender statusReceiver) &#123;</span><br><span class="line">       Preconditions.checkNotNull(statusReceiver);</span><br><span class="line">       ...</span><br><span class="line">       mActiveCount.incrementAndGet();</span><br><span class="line">       final PackageInstallObserverAdapter adapter = new PackageInstallObserverAdapter(mContext,</span><br><span class="line">               statusReceiver, sessionId, mIsInstallerDeviceOwner, userId);</span><br><span class="line">       mHandler.obtainMessage(MSG_COMMIT, adapter.getBinder()).sendToTarget();//1</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>commit方法中会将包的信息封装为PackageInstallObserverAdapter ，它在PMS中被定义。在注释1处会向Handler发送一个类型为MSG_COMMIT的消息，其中<code>adapter.getBinder()</code>会得到IPackageInstallObserver2.Stub类型的观察者，从类型就知道这个观察者是可以跨进程进行回调的。处理该消息的代码如下所示。<br><code>frameworks/base/services/core/java/com/android/server/pm/PackageInstallerSession.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">private final Handler.Callback mHandlerCallback = new Handler.Callback() &#123;</span><br><span class="line">      @Override</span><br><span class="line">      public boolean handleMessage(Message msg) &#123;</span><br><span class="line">          final PackageInfo pkgInfo = mPm.getPackageInfo(</span><br><span class="line">                  params.appPackageName, PackageManager.GET_SIGNATURES</span><br><span class="line">                          | PackageManager.MATCH_STATIC_SHARED_LIBRARIES /*flags*/, userId);</span><br><span class="line">          final ApplicationInfo appInfo = mPm.getApplicationInfo(</span><br><span class="line">                  params.appPackageName, 0, userId);</span><br><span class="line">          synchronized (mLock) &#123;</span><br><span class="line">              if (msg.obj != null) &#123;</span><br><span class="line">                  mRemoteObserver = (IPackageInstallObserver2) msg.obj;//1</span><br><span class="line">              &#125;</span><br><span class="line">              try &#123;</span><br><span class="line">                  commitLocked(pkgInfo, appInfo);//2</span><br><span class="line">              &#125; catch (PackageManagerException e) &#123;</span><br><span class="line">                  final String completeMsg = ExceptionUtils.getCompleteMessage(e);</span><br><span class="line">                  Slog.e(TAG, &quot;Commit of session &quot; + sessionId + &quot; failed: &quot; + completeMsg);</span><br><span class="line">                  destroyInternal();</span><br><span class="line">                  dispatchSessionFinished(e.error, completeMsg, null);//3</span><br><span class="line">              &#125;</span><br><span class="line">              return true;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+<p>注释1处获取IPackageInstallObserver2类型的观察者mRemoteObserver，注释2处的commitLocked方法如下所示。<br><code>frameworks/base/services/core/java/com/android/server/pm/PackageInstallerSession.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">private void commitLocked(PackageInfo pkgInfo, ApplicationInfo appInfo)</span><br><span class="line">          throws PackageManagerException &#123;</span><br><span class="line">     ...</span><br><span class="line">      mPm.installStage(mPackageName, stageDir, stageCid, localObserver, params,</span><br><span class="line">              installerPackageName, installerUid, user, mCertificates);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>commitLocked方法比较长，这里截取最主要的信息，会调用PMS的installStage方法，这样代码逻辑就进入了PMS中。<br>回到mHandlerCallback的handleMessage方法，如果commitLocked方法出现PackageManagerException异常，就会调用注释3处的dispatchSessionFinished方法，它的实现如下所示：<br><strong>frameworks/base/services/core/java/com/android/server/pm/PackageInstallerSession.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">private void dispatchSessionFinished(int returnCode, String msg, Bundle extras) &#123;</span><br><span class="line">       mFinalStatus = returnCode;</span><br><span class="line">       mFinalMessage = msg;</span><br><span class="line">       if (mRemoteObserver != null) &#123;</span><br><span class="line">           try &#123;</span><br><span class="line">               mRemoteObserver.onPackageInstalled(mPackageName, returnCode, msg, extras);//1</span><br><span class="line">           &#125; catch (RemoteException ignored) &#123;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       ...</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处会调用IPackageInstallObserver2的onPackageInstalled方法，具体是实现在PackageInstallObserver类中：<br><code>frameworks/base/core/java/android/app/PackageInstallObserver.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class PackageInstallObserver &#123;</span><br><span class="line">    private final IPackageInstallObserver2.Stub mBinder = new IPackageInstallObserver2.Stub() &#123;</span><br><span class="line">        ...</span><br><span class="line">        @Override</span><br><span class="line">        public void onPackageInstalled(String basePackageName, int returnCode,</span><br><span class="line">                String msg, Bundle extras) &#123;</span><br><span class="line">            PackageInstallObserver.this.onPackageInstalled(basePackageName, returnCode, msg,</span><br><span class="line">                    extras);//1</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure>
+<p>注释1处调用了PackageInstallObserver的onPackageInstalled方法，实现这个方法的类为PackageInstallObserver的子类、前面提到的PackageInstallObserverAdapter。总结一下就是dispatchSessionFinished方法会通过mRemoteObserver的onPackageInstalled方法，将Complete方法出现的PackageManagerException的异常信息回调给PackageInstallObserverAdapter。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h3><p>本篇文章讲解了PackageInstaller安装APK的过程，简单来说就两步：</p>
+<ol>
+<li>将APK的信息通过IO流的形式写入到PackageInstaller.Session中。</li>
+<li>调用PackageInstaller.Session的commit方法，将APK的信息交由PMS处理。</li>
+</ol>
+<p>由于PMS中对APK安装的处理比较复杂，因此关于PMS的处理部分会在本系列的下一篇文章进行讲解。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/APK安装/" rel="tag"># APK安装</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/02/synchronized/" rel="next" title="synchronized">
+                <i class="fa fa-chevron-left"></i> synchronized
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/21/APK是如何被解析的/" rel="prev" title="APK是如何被解析的">
+                APK是如何被解析的 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#PackageInstaller中的处理"><span class="nav-number">1.</span> <span class="nav-text">PackageInstaller中的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java框架层的处理"><span class="nav-number">2.</span> <span class="nav-text">Java框架层的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

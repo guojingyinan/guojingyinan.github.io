@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,WMS,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言WindowManagerService（WMS）和AMS一样，都是Android开发需要掌握的知识点，同样的，WMS也很复杂，需要多篇文章来进行讲解，为何更好的理解WMS，首先要了解WindowManager，这一篇我们来学习WindowManager体系。 Window、WindowManager和WMSWindow我们应该很熟悉，它是一个抽象类，具体的实现类为PhoneWindow，它对">
+<meta name="keywords" content="Android,WMS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android WindowManager(1)">
+<meta property="og:url" content="http://yoursite.com/2018/07/01/Android-WindowManager-1/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="前言WindowManagerService（WMS）和AMS一样，都是Android开发需要掌握的知识点，同样的，WMS也很复杂，需要多篇文章来进行讲解，为何更好的理解WMS，首先要了解WindowManager，这一篇我们来学习WindowManager体系。 Window、WindowManager和WMSWindow我们应该很熟悉，它是一个抽象类，具体的实现类为PhoneWindow，它对">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1417629-4e2047a49e2572f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1417629-d398194cb0b50bae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-11-08T03:38:29.353Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android WindowManager(1)">
+<meta name="twitter:description" content="前言WindowManagerService（WMS）和AMS一样，都是Android开发需要掌握的知识点，同样的，WMS也很复杂，需要多篇文章来进行讲解，为何更好的理解WMS，首先要了解WindowManager，这一篇我们来学习WindowManager体系。 Window、WindowManager和WMSWindow我们应该很熟悉，它是一个抽象类，具体的实现类为PhoneWindow，它对">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/1417629-4e2047a49e2572f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/07/01/Android-WindowManager-1/">
+
+
+
+
+
+  <title>Android WindowManager(1) | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/01/Android-WindowManager-1/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android WindowManager(1)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-01T11:33:48+08:00">
+                2018-07-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/WindowManager/" itemprop="url" rel="index">
+                    <span itemprop="name">WindowManager</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h3><p>WindowManagerService（WMS）和AMS一样，都是Android开发需要掌握的知识点，同样的，WMS也很复杂，需要多篇文章来进行讲解，为何更好的理解WMS，首先要了解WindowManager，这一篇我们来学习WindowManager体系。</p>
+<h3 id="Window、WindowManager和WMS"><a href="#Window、WindowManager和WMS" class="headerlink" title="Window、WindowManager和WMS"></a><strong>Window、WindowManager和WMS</strong></h3><p>Window我们应该很熟悉，它是一个抽象类，具体的实现类为PhoneWindow，它对View进行管理。 WindowManager是一个接口类，继承自接口ViewManager，从名称就知道它是用来管理Window的，它的实现类为WindowManagerImpl。如果我们想要对Window进行添加和删除就可以使用WindowManager，具体的工作都是由WMS来处理的，WindowManager和WMS通过Binder来进行跨进程通信，WMS作为系统服务有很多API是不会暴露给WindowManager的，这一点与ActivityManager和AMS的关系有些类似。<br>关于WMS的功能，会在后续文章进行介绍，这里我们只需要知道它的主要功能包括Window管理和输入系统就可以了。这一系列文章的重点是WindowManager。<br>Window、WindowManager和WMS的关系可以简略的用下图来表示。<br><a href="http://upload-images.jianshu.io/upload_images/1417629-4e2047a49e2572f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/1417629-4e2047a49e2572f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="img"></a></p>
+<p>Window包含了View并对View进行管理，Window用虚线来表示是因为Window是一个抽象概念，并不是真实存在，Window的实体其实也是View。WindowManager用来管理Window，而WindowManager所提供的功能最终会由WMS来进行处理。</p>
+<h3 id="WindowManager体系"><a href="#WindowManager体系" class="headerlink" title="WindowManager体系"></a><strong>WindowManager体系</strong></h3><p>接下来我们从源码角度来分析WindowManager体系以及Window和WindowManager的关系。<br>WindowManager是一个接口类，继承自接口ViewManager，ViewManager中定义了三个方法，分别用来添加、更新和删除View：<br><code>frameworks/base/core/java/android/view/ViewManager.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface ViewManager</span><br><span class="line">&#123;</span><br><span class="line">    public void addView(View view, ViewGroup.LayoutParams params);</span><br><span class="line">    public void updateViewLayout(View view, ViewGroup.LayoutParams params);</span><br><span class="line">    public void removeView(View view);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>WindowManager也继承了这些方法，而这些方法传入的参数都是View，说明WindowManager具体管理的是以View形式存在的Window。WindowManager在继承ViewManager的同时，又加入很多功能，包括Window的类型和层级相关的常量、内部类以及一些方法，其中有两个方法是根据Window的特性加入的，如下所示。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">public Display getDefaultDisplay();</span><br><span class="line">public void removeViewImmediate(View view);</span><br></pre></td></tr></table></figure>
+<p>getDefaultDisplay方法会得知这个WindowManager实例将Window添加到哪个屏幕上了，换句话说，就是得到WindowManager所管理的屏幕（Display）。removeViewImmediate方法则规定在这个方法返回前要立即执行<code>View.onDetachedFromWindow()</code>，来完成传入的View相关的销毁工作。关于Window的类型和层级会在本系列后续的文章进行介绍。<br>Window是一个抽象类，它的具体实现类为PhoneWindow。在Activity启动过程中会调用ActivityThread的performLaunchActivity方法，performLaunchActivity方法中又会调用Activity的attach方法，如果不了解这些请查看<a href="http://liuwangshu.cn/framework/component/1-activity-start-2.html" target="_blank" rel="noopener">Android深入四大组件（一）应用程序启动过程（后篇）</a>这篇文章。<br>我们从Activity的attach方法开始入手，如下所示。<br><strong>frameworks/base/core/java/android/app/Activity.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">final void attach(Context context, ActivityThread aThread,</span><br><span class="line">            Instrumentation instr, IBinder token, int ident,</span><br><span class="line">            Application application, Intent intent, ActivityInfo info,</span><br><span class="line">            CharSequence title, Activity parent, String id,</span><br><span class="line">            NonConfigurationInstances lastNonConfigurationInstances,</span><br><span class="line">            Configuration config, String referrer, IVoiceInteractor voiceInteractor,</span><br><span class="line">            Window window) &#123;</span><br><span class="line">        attachBaseContext(context);</span><br><span class="line">        mFragments.attachHost(null /*parent*/);</span><br><span class="line">        mWindow = new PhoneWindow(this, window);//1</span><br><span class="line">        ...</span><br><span class="line">         /**</span><br><span class="line">         *2</span><br><span class="line">         */</span><br><span class="line">        mWindow.setWindowManager(</span><br><span class="line">                (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),</span><br><span class="line">                mToken, mComponent.flattenToString(),</span><br><span class="line">                (info.flags &amp; ActivityInfo.FLAG_HARDWARE_ACCELERATED) != 0);</span><br><span class="line">      ...</span><br></pre></td></tr></table></figure>
+<p>注释1处创建了PhoneWindow，在注释2处调用了PhoneWindow的setWindowManager方法，这个方法的具体的实现在PhoneWindow的父类Window中。<br><code>frameworks/base/core/java/android/view/Window.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Set the window manager for use by this Window to, for example,</span><br><span class="line"> * display panels.  This is &lt;em&gt;not&lt;/em&gt; used for displaying the</span><br><span class="line"> * Window itself -- that must be done by the client.</span><br><span class="line"> *</span><br><span class="line"> * @param wm The window manager for adding new windows.</span><br><span class="line"> */</span><br><span class="line">public void setWindowManager(WindowManager wm, IBinder appToken, String appName,</span><br><span class="line">        boolean hardwareAccelerated) &#123;</span><br><span class="line">    mAppToken = appToken;</span><br><span class="line">    mAppName = appName;</span><br><span class="line">    mHardwareAccelerated = hardwareAccelerated</span><br><span class="line">            || SystemProperties.getBoolean(PROPERTY_HARDWARE_UI, false);</span><br><span class="line">    if (wm == null) &#123;</span><br><span class="line">        wm = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);</span><br><span class="line">    &#125;</span><br><span class="line">    mWindowManager = ((WindowManagerImpl)wm).createLocalWindowManager(this);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果传入的WindowManager为null，就会在注释1处调用Context的getSystemService方法，并传入服务的名称Context.WINDOW_SERVICE（”window”），具体的实现在ContextImpl中，如下所示。<br><code>frameworks/base/core/java/android/app/ContextImpl.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Object getSystemService(String name) &#123;</span><br><span class="line">    return SystemServiceRegistry.getSystemService(this, name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Override</span><br><span class="line">public String getSystemServiceName(Class&lt;?&gt; serviceClass) &#123;</span><br><span class="line">    return SystemServiceRegistry.getSystemServiceName(serviceClass);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最终会调用SystemServiceRegistry的getSystemServiceName方法。<br><code>frameworks/base/core/java/android/app/SystemServiceRegistry.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public static String getSystemServiceName(Class&lt;?&gt; serviceClass) &#123;</span><br><span class="line">      return SYSTEM_SERVICE_NAMES.get(serviceClass);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>SYSTEM_SERVICE_NAMES是一个HashMap类型的数据，它用来存储服务的名称，那么传入的Context.WINDOW_SERVICE到底对应着什么？我们接着往下看。<br><code>frameworks/base/core/java/android/app/SystemServiceRegistry.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">final class SystemServiceRegistry &#123;</span><br><span class="line">...</span><br><span class="line"> private SystemServiceRegistry() &#123; &#125;</span><br><span class="line"> static &#123;</span><br><span class="line"> ...</span><br><span class="line">   registerService(Context.WINDOW_SERVICE, WindowManager.class,</span><br><span class="line">                new CachedServiceFetcher&lt;WindowManager&gt;() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public WindowManager createService(ContextImpl ctx) &#123;</span><br><span class="line">                return new WindowManagerImpl(ctx);</span><br><span class="line">            &#125;&#125;);</span><br><span class="line">...</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SystemServiceRegistry 的静态代码块中会调用多个registerService方法，这里只列举了和本文有关的一个。registerService方法会将传入的服务的名称存入到SYSTEM_SERVICE_NAMES中。从上面代码可以看出，传入的Context.WINDOW_SERVICE对应的就是WindowManagerImpl实例，因此得出结论，Context的getSystemService方法得到的是WindowManagerImpl实例。我们再回到Window的setWindowManager方法，在注释1处得到WindowManagerImpl实例后转为WindowManager类型，在注释2处调用了WindowManagerImpl的createLocalWindowManager方法：</p>
+<p><code>frameworks/base/core/java/android/view/WindowManagerImpl</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public WindowManagerImpl createLocalWindowManager(Window parentWindow) &#123;</span><br><span class="line">       return new WindowManagerImpl(mContext, parentWindow);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>createLocalWindowManager方法同样也是创建WindowManagerImpl，不同的是这次创建WindowManagerImpl时将创建它的Window作为参数传了进来，这样WindowManagerImpl就持有了Window的引用，就可以对Window进行操作，比如<br>在Window中添加View，来查看WindowManagerImpl的addView方法：<br><code>frameworks/base/core/java/android/view/WindowManagerImpl</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line"> public void addView(@NonNull View view, @NonNull ViewGroup.LayoutParams params) &#123;</span><br><span class="line">     applyDefaultToken(params);</span><br><span class="line">     mGlobal.addView(view, params, mContext.getDisplay(), mParentWindow);//1</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处调用了WindowManagerGlobal的addView方法，其中最后一个参数mParentWindow就是Window，可以看出WindowManagerImpl虽然是WindowManager的实现类，但是却没有实现什么功能，而是将功能实现委托给了WindowManagerGlobal，这里用到的是桥接模式。关于在Window中添加View，本系列后续的文章会详细介绍。<br>我们来查看WindowManagerImpl中如何定义的WindowManagerGlobal：<br><code>frameworks/base/core/java/android/view/WindowManagerImpl</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public final class WindowManagerImpl implements WindowManager &#123;</span><br><span class="line">    private final WindowManagerGlobal mGlobal = WindowManagerGlobal.getInstance();</span><br><span class="line">    private final Context mContext;</span><br><span class="line">    private final Window mParentWindow;//1</span><br><span class="line">...</span><br><span class="line">  private WindowManagerImpl(Context context, Window parentWindow) &#123;</span><br><span class="line">        mContext = context;</span><br><span class="line">        mParentWindow = parentWindow;</span><br><span class="line">    &#125;</span><br><span class="line"> ...   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出WindowManagerGlobal是一个单例，说明在一个进程中只有一个WindowManagerGlobal实例。注释1处说明WindowManagerImpl可能会实现多个Window，也就是说在一个进程中WindowManagerImpl可能会有多个实例。</p>
+<p>通过如上的源码分析，Window和WindowManager的关系如下图所示。</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1417629-d398194cb0b50bae.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="img"></p>
+<p>PhoneWindow继承自Window，Window通过setWindowManager方法与WindowManager发生关联。WindowManager继承自接口ViewManager，WindowManagerImpl是WindowManager接口的实现类，但是具体的功能都会委托给WindowManagerGlobal来实现。</p>
+<p>原文：<a href="http://liuwangshu.cn/framework/wm/1-windowmanager.html" target="_blank" rel="noopener">http://liuwangshu.cn/framework/wm/1-windowmanager.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/WMS/" rel="tag"># WMS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/28/Android-PackageManagerService/" rel="next" title="Android PackageManagerService">
+                <i class="fa fa-chevron-left"></i> Android PackageManagerService
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/01/Android-WindowManager-2/" rel="prev" title="Android WindowManager(2)">
+                Android WindowManager(2) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Window、WindowManager和WMS"><span class="nav-number">2.</span> <span class="nav-text">Window、WindowManager和WMS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WindowManager体系"><span class="nav-number">3.</span> <span class="nav-text">WindowManager体系</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

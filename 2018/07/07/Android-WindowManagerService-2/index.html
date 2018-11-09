@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,WMS,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="WMS的重要成员所谓WMS的重要成员是指WMS中的重要的成员变量，如下所示。frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java 12345678910111213141516171819202122final WindowManagerPolicy mPolicy;final IAct">
+<meta name="keywords" content="Android,WMS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android WindowManagerService(2)">
+<meta property="og:url" content="http://yoursite.com/2018/07/07/Android-WindowManagerService-2/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="WMS的重要成员所谓WMS的重要成员是指WMS中的重要的成员变量，如下所示。frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java 12345678910111213141516171819202122final WindowManagerPolicy mPolicy;final IAct">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1417629-a2307e2c73db270d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-11-08T03:51:41.084Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android WindowManagerService(2)">
+<meta name="twitter:description" content="WMS的重要成员所谓WMS的重要成员是指WMS中的重要的成员变量，如下所示。frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java 12345678910111213141516171819202122final WindowManagerPolicy mPolicy;final IAct">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/1417629-a2307e2c73db270d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/07/07/Android-WindowManagerService-2/">
+
+
+
+
+
+  <title>Android WindowManagerService(2) | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/07/Android-WindowManagerService-2/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android WindowManagerService(2)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-07T15:50:37+08:00">
+                2018-07-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/WindowManager/" itemprop="url" rel="index">
+                    <span itemprop="name">WindowManager</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="WMS的重要成员"><a href="#WMS的重要成员" class="headerlink" title="WMS的重要成员"></a><strong>WMS的重要成员</strong></h3><p>所谓WMS的重要成员是指WMS中的重要的成员变量，如下所示。<br><code>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">final WindowManagerPolicy mPolicy;</span><br><span class="line">final IActivityManager mActivityManager;</span><br><span class="line">final ActivityManagerInternal mAmInternal;</span><br><span class="line">final AppOpsManager mAppOps;</span><br><span class="line">final DisplaySettings mDisplaySettings;</span><br><span class="line">...</span><br><span class="line">final ArraySet&lt;Session&gt; mSessions = new ArraySet&lt;&gt;();</span><br><span class="line">final WindowHashMap mWindowMap = new WindowHashMap();</span><br><span class="line">final ArrayList&lt;AppWindowToken&gt; mFinishedStarting = new ArrayList&lt;&gt;();</span><br><span class="line">final ArrayList&lt;AppWindowToken&gt; mFinishedEarlyAnim = new ArrayList&lt;&gt;();</span><br><span class="line">final ArrayList&lt;AppWindowToken&gt; mWindowReplacementTimeouts = new ArrayList&lt;&gt;();</span><br><span class="line">final ArrayList&lt;WindowState&gt; mResizingWindows = new ArrayList&lt;&gt;();</span><br><span class="line">final ArrayList&lt;WindowState&gt; mPendingRemove = new ArrayList&lt;&gt;();</span><br><span class="line">WindowState[] mPendingRemoveTmp = new WindowState[20];</span><br><span class="line">final ArrayList&lt;WindowState&gt; mDestroySurface = new ArrayList&lt;&gt;();</span><br><span class="line">final ArrayList&lt;WindowState&gt; mDestroyPreservedSurface = new ArrayList&lt;&gt;();</span><br><span class="line">...</span><br><span class="line">final H mH = new H();</span><br><span class="line">...</span><br><span class="line">final WindowAnimator mAnimator;</span><br><span class="line">...</span><br><span class="line"> final InputManagerService mInputManager</span><br></pre></td></tr></table></figure>
+<p>这里列出了WMS的部分成员变量，下面分别对它们进行简单的介绍。</p>
+<p><strong>mPolicy：WindowManagerPolicy</strong><br>WindowManagerPolicy（WMP）类型的变量。WindowManagerPolicy是窗口管理策略的接口类，用来定义一个窗口策略所要遵循的通用规范，并提供了WindowManager所有的特定的UI行为。它的具体实现类为PhoneWindowManager，这个实现类在WMS创建时被创建。WMP允许定制窗口层级和特殊窗口类型以及关键的调度和布局。</p>
+<p><strong>mSessions：ArraySet</strong><br>ArraySet类型的变量，元素类型为Session。在<a href="http://liuwangshu.cn/framework/wm/3-add-window.html" target="_blank" rel="noopener">Android解析WindowManager（三）Window的添加过程</a>这篇文章中我提到过Session，它主要用于进程间通信，其他的应用程序进程想要和WMS进程进行通信就需要经过Session，并且每个应用程序进程都会对应一个Session，WMS保存这些Session用来记录所有向WMS提出窗口管理服务的客户端。<br><strong>mWindowMap：WindowHashMap</strong><br>WindowHashMap类型的变量，WindowHashMap继承了HashMap，它限制了HashMap的key值的类型为IBinder，value值的类型为WindowState。WindowState用于保存窗口的信息，在WMS中它用来描述一个窗口。综上得出结论，mWindowMap就是用来保存WMS中各种窗口的集合。</p>
+<p><strong>mFinishedStarting：ArrayList</strong><br>ArrayList类型的变量，元素类型为AppWindowToken，它是WindowToken的子类。要想理解mFinishedStarting的含义，需要先了解WindowToken是什么。WindowToken主要有两个作用：</p>
+<ul>
+<li>可以理解为窗口令牌，当应用程序想要向WMS申请新创建一个窗口，则需要向WMS出示有效的WindowToken。AppWindowToken作为WindowToken的子类，主要用来描述应用程序的WindowToken结构，<br>应用程序中每个Activity都对应一个AppWindowToken。</li>
+<li>WindowToken会将相同组件（比如Acitivity）的窗口（WindowState）集合在一起，方便管理。</li>
+</ul>
+<p>mFinishedStarting就是用于存储已经完成启动的应用程序窗口（比如Acitivity）的AppWindowToken的列表。<br>除了mFinishedStarting，还有类似的mFinishedEarlyAnim和mWindowReplacementTimeouts，其中mFinishedEarlyAnim存储了已经完成窗口绘制并且不需要展示任何已保存surface的应用程序窗口的AppWindowToken。mWindowReplacementTimeout存储了等待更换的应用程序窗口的AppWindowToken，如果更换不及时，旧窗口就需要被处理。</p>
+<p><strong>mResizingWindows：ArrayList</strong><br>ArrayList类型的变量，元素类型为WindowState。<br>mResizingWindows是用来存储正在调整大小的窗口的列表。与mResizingWindows类似的还有mPendingRemove、mDestroySurface和mDestroyPreservedSurface等等。其中mPendingRemove是在内存耗尽时设置的，里面存有需要强制删除的窗口。mDestroySurface里面存有需要被Destroy的Surface。mDestroyPreservedSurface里面存有窗口需要保存的等待销毁的Surface，为什么窗口要保存这些Surface？这是因为当窗口经历Surface变化时，窗口需要一直保持旧Surface，直到新Surface的第一帧绘制完成。</p>
+<p><strong>mAnimator：WindowAnimator</strong><br>WindowAnimator类型的变量，用于管理窗口的动画以及特效动画。</p>
+<p><strong>mH：H</strong><br>H类型的变量，系统的Handler类，用于将任务加入到主线程的消息队列中，这样代码逻辑就会在主线程中执行。</p>
+<p><strong>mInputManager：InputManagerService</strong><br>InputManagerService类型的变量，输入系统的管理者。InputManagerService（IMS）会对触摸事件进行处理，它会寻找一个最合适的窗口来处理触摸反馈信息，WMS是窗口的管理者，因此，WMS“理所应当”的成为了输入系统的中转站，WMS包含了IMS的引用不足为怪。</p>
+<h3 id="Window的添加过程（WMS部分）"><a href="#Window的添加过程（WMS部分）" class="headerlink" title="Window的添加过程（WMS部分）"></a><strong>Window的添加过程（WMS部分）</strong></h3><p>我们知道Window的操作分为两大部分，一部分是WindowManager处理部分，另一部分是WMS处理部分，如下所示。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/1417629-a2307e2c73db270d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/1417629-a2307e2c73db270d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="img"></a><br>在<a href="http://liuwangshu.cn/framework/wm/3-add-window.html" target="_blank" rel="noopener">Android解析WindowManager（三）Window的添加过程</a>这篇文章中，我讲解了Window的添加过程的WindowManager处理部分，这一篇文章我们接着来学习Window的添加过程的WMS部分。<br>无论是系统窗口还是Activity，它们的Window的添加过程都会调用WMS的addWindow方法，由于这个方法代码逻辑比较多，这里分为3个部分来阅读。<br><code>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</code></p>
+<h4 id="addWindow方法part1"><a href="#addWindow方法part1" class="headerlink" title="addWindow方法part1"></a><strong>addWindow方法part1</strong></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"> public int addWindow(Session session, IWindow client, int seq,</span><br><span class="line">            WindowManager.LayoutParams attrs, int viewVisibility, int displayId,</span><br><span class="line">            Rect outContentInsets, Rect outStableInsets, Rect outOutsets,</span><br><span class="line">            InputChannel outInputChannel) &#123;</span><br><span class="line"></span><br><span class="line">        int[] appOp = new int[1];</span><br><span class="line">        int res = mPolicy.checkAddPermission(attrs, appOp);//1</span><br><span class="line">        if (res != WindowManagerGlobal.ADD_OKAY) &#123;</span><br><span class="line">            return res;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        synchronized(mWindowMap) &#123;</span><br><span class="line">            if (!mDisplayReady) &#123;</span><br><span class="line">                throw new IllegalStateException(&quot;Display has not been initialialized&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">            final DisplayContent displayContent = mRoot.getDisplayContentOrCreate(displayId);//2</span><br><span class="line">            if (displayContent == null) &#123;</span><br><span class="line">                Slog.w(TAG_WM, &quot;Attempted to add window to a display that does not exist: &quot;</span><br><span class="line">                        + displayId + &quot;.  Aborting.&quot;);</span><br><span class="line">                return WindowManagerGlobal.ADD_INVALID_DISPLAY;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">            if (type &gt;= FIRST_SUB_WINDOW &amp;&amp; type &lt;= LAST_SUB_WINDOW) &#123;//3</span><br><span class="line">                parentWindow = windowForClientLocked(null, attrs.token, false);//4</span><br><span class="line">                if (parentWindow == null) &#123;</span><br><span class="line">                    Slog.w(TAG_WM, &quot;Attempted to add window with token that is not a window: &quot;</span><br><span class="line">                          + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                    return WindowManagerGlobal.ADD_BAD_SUBWINDOW_TOKEN;</span><br><span class="line">                &#125;</span><br><span class="line">                if (parentWindow.mAttrs.type &gt;= FIRST_SUB_WINDOW</span><br><span class="line">                        &amp;&amp; parentWindow.mAttrs.type &lt;= LAST_SUB_WINDOW) &#123;</span><br><span class="line">                    Slog.w(TAG_WM, &quot;Attempted to add window with token that is a sub-window: &quot;</span><br><span class="line">                            + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                    return WindowManagerGlobal.ADD_BAD_SUBWINDOW_TOKEN;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">           ...</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>WMS的addWindow返回的是addWindow的各种状态，比如添加Window成功，无效的display等等，这些状态被定义在WindowManagerGlobal中。<br>注释1处根据Window的属性，调用WMP的checkAddPermission方法来检查权限，具体的实现在PhoneWindowManager的checkAddPermission方法中，如果没有权限则不会执行后续的代码逻辑。注释2处通过displayId来获得窗口要添加到哪个DisplayContent上，如果没有找到DisplayContent，则返回WindowManagerGlobal.ADD_INVALID_DISPLAY这一状态，其中DisplayContent用来描述一块屏幕。注释3处，type代表一个窗口的类型，它的数值介于FIRST_SUB_WINDOW和LAST_SUB_WINDOW之间（1000~1999），这个数值定义在WindowManager中，说明这个窗口是一个子窗口，不了解窗口类型取值范围的请阅读<a href="http://liuwangshu.cn/framework/wm/2-window-property.html" target="_blank" rel="noopener">Android解析WindowManager（二）Window的属性</a>这篇文章。注释4处，attrs.token是IBinder类型的对象，windowForClientLocked方法内部会根据attrs.token作为key值从mWindowMap中得到该子窗口的父窗口。接着对父窗口进行判断，如果父窗口为null或者type的取值范围不正确则会返回错误的状态。</p>
+<h4 id="addWindow方法part2"><a href="#addWindow方法part2" class="headerlink" title="addWindow方法part2"></a><strong>addWindow方法part2</strong></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">         AppWindowToken atoken = null;</span><br><span class="line">         final boolean hasParent = parentWindow != null;</span><br><span class="line">         WindowToken token = displayContent.getWindowToken(</span><br><span class="line">                 hasParent ? parentWindow.mAttrs.token : attrs.token);//1</span><br><span class="line">         final int rootType = hasParent ? parentWindow.mAttrs.type : type;//2</span><br><span class="line">         boolean addToastWindowRequiresToken = false;</span><br><span class="line"></span><br><span class="line">         if (token == null) &#123;</span><br><span class="line">             if (rootType &gt;= FIRST_APPLICATION_WINDOW &amp;&amp; rootType &lt;= LAST_APPLICATION_WINDOW) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add application window with unknown token &quot;</span><br><span class="line">                       + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">             &#125;</span><br><span class="line">             if (rootType == TYPE_INPUT_METHOD) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add input method window with unknown token &quot;</span><br><span class="line">                       + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">             &#125;</span><br><span class="line">             if (rootType == TYPE_VOICE_INTERACTION) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add voice interaction window with unknown token &quot;</span><br><span class="line">                       + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">             &#125;</span><br><span class="line">             if (rootType == TYPE_WALLPAPER) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add wallpaper window with unknown token &quot;</span><br><span class="line">                       + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">             &#125;</span><br><span class="line">             ...</span><br><span class="line">             if (type == TYPE_TOAST) &#123;</span><br><span class="line">                 // Apps targeting SDK above N MR1 cannot arbitrary add toast windows.</span><br><span class="line">                 if (doesAddToastWindowRequireToken(attrs.packageName, callingUid,</span><br><span class="line">                         parentWindow)) &#123;</span><br><span class="line">                     Slog.w(TAG_WM, &quot;Attempted to add a toast window with unknown token &quot;</span><br><span class="line">                             + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                     return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;</span><br><span class="line">             final IBinder binder = attrs.token != null ? attrs.token : client.asBinder();</span><br><span class="line">             token = new WindowToken(this, binder, type, false, displayContent,</span><br><span class="line">                     session.mCanAddInternalSystemWindow);//3</span><br><span class="line">         &#125; else if (rootType &gt;= FIRST_APPLICATION_WINDOW &amp;&amp; rootType &lt;= LAST_APPLICATION_WINDOW) &#123;//4</span><br><span class="line">             atoken = token.asAppWindowToken();//5</span><br><span class="line">             if (atoken == null) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add window with non-application token &quot;</span><br><span class="line">                       + token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_NOT_APP_TOKEN;</span><br><span class="line">             &#125; else if (atoken.removed) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add window with exiting application token &quot;</span><br><span class="line">                       + token + &quot;.  Aborting.&quot;);</span><br><span class="line">                 return WindowManagerGlobal.ADD_APP_EXITING;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125; else if (rootType == TYPE_INPUT_METHOD) &#123;</span><br><span class="line">             if (token.windowType != TYPE_INPUT_METHOD) &#123;</span><br><span class="line">                 Slog.w(TAG_WM, &quot;Attempted to add input method window with bad token &quot;</span><br><span class="line">                         + attrs.token + &quot;.  Aborting.&quot;);</span><br><span class="line">                   return WindowManagerGlobal.ADD_BAD_APP_TOKEN;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
+<p>注释1处通过displayContent的getWindowToken方法来得到WindowToken。注释2处，如果有父窗口就将父窗口的type值赋值给rootType，如果没有将当前窗口的type值赋值给rootType。接下来如果WindowToken为null，则根据rootType或者type的值进行区分判断，如果rootType值等于TYPE_INPUT_METHOD、TYPE_WALLPAPER等值时，则返回状态值WindowManagerGlobal.ADD_BAD_APP_TOKEN，说明rootType值等于TYPE_INPUT_METHOD、TYPE_WALLPAPER等值时是不允许WindowToken为null的。通过多次的条件判断筛选，最后会在注释3处隐式创建WindowToken，这说明当我们添加窗口时是可以不向WMS提供WindowToken的，前提是rootType和type的值不为前面条件判断筛选的值。WindowToken隐式和显式的创建肯定是要加以区分的，注释3处的第4个参数为false就代表这个WindowToken是隐式创建的。接下来的代码逻辑就是WindowToken不为null的情况，根据rootType和type的值进行判断，比如在注释4处判断如果窗口为应用程序窗口，在注释5处会将WindowToken转换为专门针对应用程序窗口的AppWindowToken，然后根据AppWindowToken的值进行后续的判断。</p>
+<h4 id="addWindow方法part3"><a href="#addWindow方法part3" class="headerlink" title="addWindow方法part3"></a><strong>addWindow方法part3</strong></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"> ...</span><br><span class="line">final WindowState win = new WindowState(this, session, client, token, parentWindow,</span><br><span class="line">                  appOp[0], seq, attrs, viewVisibility, session.mUid,</span><br><span class="line">                  session.mCanAddInternalSystemWindow);//1</span><br><span class="line">          if (win.mDeathRecipient == null) &#123;//2</span><br><span class="line">              // Client has apparently died, so there is no reason to</span><br><span class="line">              // continue.</span><br><span class="line">              Slog.w(TAG_WM, &quot;Adding window client &quot; + client.asBinder()</span><br><span class="line">                      + &quot; that is dead, aborting.&quot;);</span><br><span class="line">              return WindowManagerGlobal.ADD_APP_EXITING;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          if (win.getDisplayContent() == null) &#123;//3</span><br><span class="line">              Slog.w(TAG_WM, &quot;Adding window to Display that has been removed.&quot;);</span><br><span class="line">              return WindowManagerGlobal.ADD_INVALID_DISPLAY;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          mPolicy.adjustWindowParamsLw(win.mAttrs);//4</span><br><span class="line">          win.setShowToOwnerOnlyLocked(mPolicy.checkShowToOwnerOnly(attrs));</span><br><span class="line">          res = mPolicy.prepareAddWindowLw(win, attrs);//5</span><br><span class="line">          ...</span><br><span class="line">          win.attach();</span><br><span class="line">          mWindowMap.put(client.asBinder(), win);//6</span><br><span class="line">          if (win.mAppOp != AppOpsManager.OP_NONE) &#123;</span><br><span class="line">              int startOpResult = mAppOps.startOpNoThrow(win.mAppOp, win.getOwningUid(),</span><br><span class="line">                      win.getOwningPackage());</span><br><span class="line">              if ((startOpResult != AppOpsManager.MODE_ALLOWED) &amp;&amp;</span><br><span class="line">                      (startOpResult != AppOpsManager.MODE_DEFAULT)) &#123;</span><br><span class="line">                  win.setAppOpVisibilityLw(false);</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          final AppWindowToken aToken = token.asAppWindowToken();</span><br><span class="line">          if (type == TYPE_APPLICATION_STARTING &amp;&amp; aToken != null) &#123;</span><br><span class="line">              aToken.startingWindow = win;</span><br><span class="line">              if (DEBUG_STARTING_WINDOW) Slog.v (TAG_WM, &quot;addWindow: &quot; + aToken</span><br><span class="line">                      + &quot; startingWindow=&quot; + win);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          boolean imMayMove = true;</span><br><span class="line">          win.mToken.addWindow(win);//7</span><br><span class="line">           if (type == TYPE_INPUT_METHOD) &#123;</span><br><span class="line">              win.mGivenInsetsPending = true;</span><br><span class="line">              setInputMethodWindowLocked(win);</span><br><span class="line">              imMayMove = false;</span><br><span class="line">          &#125; else if (type == TYPE_INPUT_METHOD_DIALOG) &#123;</span><br><span class="line">              displayContent.computeImeTarget(true /* updateImeTarget */);</span><br><span class="line">              imMayMove = false;</span><br><span class="line">          &#125; else &#123;</span><br><span class="line">              if (type == TYPE_WALLPAPER) &#123;</span><br><span class="line">                  displayContent.mWallpaperController.clearLastWallpaperTimeoutTime();</span><br><span class="line">                  displayContent.pendingLayoutChanges |= FINISH_LAYOUT_REDO_WALLPAPER;</span><br><span class="line">              &#125; else if ((attrs.flags&amp;FLAG_SHOW_WALLPAPER) != 0) &#123;</span><br><span class="line">                  displayContent.pendingLayoutChanges |= FINISH_LAYOUT_REDO_WALLPAPER;</span><br><span class="line">              &#125; else if (displayContent.mWallpaperController.isBelowWallpaperTarget(win)) &#123;</span><br><span class="line">                  displayContent.pendingLayoutChanges |= FINISH_LAYOUT_REDO_WALLPAPER;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">       ...</span><br></pre></td></tr></table></figure>
+<p>在注释1处创建了WindowState，它存有窗口的所有的状态信息，在WMS中它代表一个窗口。从WindowState传入的参数，可以发现WindowState中包含了WMS、Session、WindowToken、父类的WindowState、LayoutParams等信息。紧接着在注释2和3处分别判断请求添加窗口的客户端是否已经死亡、窗口的DisplayContent是否为null，如果是则不会再执行下面的代码逻辑。注释4处调用了WMP的adjustWindowParamsLw方法，该方法的实现在PhoneWindowManager中，会根据窗口的type对窗口的LayoutParams的一些成员变量进行修改。注释5处调用WMP的prepareAddWindowLw方法，用于准备将窗口添加到系统中。<br>注释6处将WindowState添加到mWindowMap中。注释7处将WindowState添加到该WindowState对应的WindowToken中(实际是保存在WindowToken的父类WindowContainer中)，这样WindowToken就包含了相同组件的WindowState。</p>
+<h4 id="addWindow方法总结"><a href="#addWindow方法总结" class="headerlink" title="addWindow方法总结"></a><strong>addWindow方法总结</strong></h4><p>addWindow方法分了3个部分来进行讲解，主要就是做了下面4件事：</p>
+<ol>
+<li>对所要添加的窗口进行检查，如果窗口不满足一些条件，就不会再执行下面的代码逻辑。</li>
+<li>WindowToken相关的处理，比如有的窗口类型需要提供WindowToken，没有提供的话就不会执行下面的代码逻辑，有的窗口类型则需要由WMS隐式创建WindowToken。</li>
+<li>WindowState的创建和相关处理，将WindowToken和WindowState相关联。</li>
+<li>创建和配置DisplayContent，完成窗口添加到系统前的准备工作。</li>
+</ol>
+<h3 id="结语"><a href="#结语" class="headerlink" title="结语"></a><strong>结语</strong></h3><p>在本篇文章中我们首先学习了WMS的重要成员，了解这些成员有利于对WMS的进一步分析。接下来我们又学习了Window的添加过程的WMS部分，将addWindow方法分为了3个部分来进行讲解，从addWindow方法我们得知WMS有3个重要的类分别是WindowToken、WindowState和DisplayContent，关于它们会在本系列后续的文章中进行介绍。</p>
+<p>原文：<a href="http://liuwangshu.cn/framework/wms/2-wms-member.html" target="_blank" rel="noopener">http://liuwangshu.cn/framework/wms/2-wms-member.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/WMS/" rel="tag"># WMS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/07/Android-WindowManagerService-1/" rel="next" title="Android WindowManagerService(1)">
+                <i class="fa fa-chevron-left"></i> Android WindowManagerService(1)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/21/Android-ActivityManagerService-1/" rel="prev" title="Android ActivityManagerService(1)">
+                Android ActivityManagerService(1) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#WMS的重要成员"><span class="nav-number">1.</span> <span class="nav-text">WMS的重要成员</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Window的添加过程（WMS部分）"><span class="nav-number">2.</span> <span class="nav-text">Window的添加过程（WMS部分）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#addWindow方法part1"><span class="nav-number">2.1.</span> <span class="nav-text">addWindow方法part1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#addWindow方法part2"><span class="nav-number">2.2.</span> <span class="nav-text">addWindow方法part2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#addWindow方法part3"><span class="nav-number">2.3.</span> <span class="nav-text">addWindow方法part3</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#addWindow方法总结"><span class="nav-number">2.4.</span> <span class="nav-text">addWindow方法总结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#结语"><span class="nav-number">3.</span> <span class="nav-text">结语</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

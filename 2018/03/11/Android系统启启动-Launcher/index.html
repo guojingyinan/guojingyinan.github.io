@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Launcher,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="​    此前的文章我们学习了init进程、Zygote进程和SyetemServer进程的启动过程，这一篇文章我们就来学习Android系统启动流程的最后一步：Launcher的启动流程，并结合本系列的前三篇文章的内容来讲解Android系统启动流程。 Launcher概述​    Android系统启动的最后一步是启动一个Home应用程序，这个应用程序用来显示系统中已经安装的应用程序，这个Ho">
+<meta name="keywords" content="Android,Launcher">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android系统启启动_Launcher">
+<meta property="og:url" content="http://yoursite.com/2018/03/11/Android系统启启动-Launcher/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="​    此前的文章我们学习了init进程、Zygote进程和SyetemServer进程的启动过程，这一篇文章我们就来学习Android系统启动流程的最后一步：Launcher的启动流程，并结合本系列的前三篇文章的内容来讲解Android系统启动流程。 Launcher概述​    Android系统启动的最后一步是启动一个Home应用程序，这个应用程序用来显示系统中已经安装的应用程序，这个Ho">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/03/11/Android系统启启动-Launcher/20170223132536666.png">
+<meta property="og:updated_time" content="2018-11-08T02:46:49.422Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android系统启启动_Launcher">
+<meta name="twitter:description" content="​    此前的文章我们学习了init进程、Zygote进程和SyetemServer进程的启动过程，这一篇文章我们就来学习Android系统启动流程的最后一步：Launcher的启动流程，并结合本系列的前三篇文章的内容来讲解Android系统启动流程。 Launcher概述​    Android系统启动的最后一步是启动一个Home应用程序，这个应用程序用来显示系统中已经安装的应用程序，这个Ho">
+<meta name="twitter:image" content="http://yoursite.com/2018/03/11/Android系统启启动-Launcher/20170223132536666.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/03/11/Android系统启启动-Launcher/">
+
+
+
+
+
+  <title>Android系统启启动_Launcher | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/11/Android系统启启动-Launcher/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android系统启启动_Launcher</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-11T20:41:55+08:00">
+                2018-03-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/系统启动流程/" itemprop="url" rel="index">
+                    <span itemprop="name">系统启动流程</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>​    此前的文章我们学习了init进程、Zygote进程和SyetemServer进程的启动过程，这一篇文章我们就来学习Android系统启动流程的最后一步：Launcher的启动流程，并结合本系列的前三篇文章的内容来讲解Android系统启动流程。</p>
+<h5 id="Launcher概述"><a href="#Launcher概述" class="headerlink" title="Launcher概述"></a>Launcher概述</h5><p>​    Android系统启动的最后一步是启动一个Home应用程序，这个应用程序用来显示系统中已经安装的应用程序，这个Home应用程序就叫做Launcher。应用程序Launcher在启动过程中会请求PackageManagerService返回系统中已经安装的应用程序的信息，并将这些信息封装成一个快捷图标列表显示在系统屏幕上，这样用户可以通过点击这些快捷图标来启动相应的应用程序。</p>
+<h5 id="Launcher启动流程"><a href="#Launcher启动流程" class="headerlink" title="Launcher启动流程"></a>Launcher启动流程</h5><p>​    SyetemServer进程在启动的过程中会启动PackageManagerService，PackageManagerService启动后会将系统中的应用程序安装完成。在此前已经启动的ActivityManagerService会将Launcher启动起来。<br>启动Launcher的入口为ActivityManagerService的systemReady函数，如下所示。 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/services/java/com/android/server/SystemServer.java</span><br><span class="line">private void startOtherServices() &#123;</span><br><span class="line"> 	...</span><br><span class="line">  	mActivityManagerService.systemReady(new Runnable() &#123;</span><br><span class="line">      @Override</span><br><span class="line">      public void run() &#123;</span><br><span class="line">          Slog.i(TAG, &quot;Making services ready&quot;);</span><br><span class="line">          mSystemServiceManager.startBootPhase(</span><br><span class="line">          SystemService.PHASE_ACTIVITY_MANAGER_READY);</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在startOtherServices函数中，会调用ActivityManagerService的systemReady函数： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java</span><br><span class="line">public void systemReady(final Runnable goingCallback) &#123;</span><br><span class="line">    ...</span><br><span class="line">    synchronized (this) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mStackSupervisor.resumeFocusedStackTopActivityLocked();</span><br><span class="line">        mUserController.sendUserSwitchBroadcastsLocked(-1, currentUserId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>systemReady函数中调用了ActivityStackSupervisor的resumeFocusedStackTopActivityLocked函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">//frameworks/base/services/core/java/com/android/server/am/ActivityStackSupervisor.java</span><br><span class="line">boolean resumeFocusedStackTopActivityLocked() &#123;</span><br><span class="line">	return resumeFocusedStackTopActivityLocked(null, null, null);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">boolean resumeFocusedStackTopActivityLocked(</span><br><span class="line">        ActivityStack targetStack, ActivityRecord target, ActivityOptions targetOptions) &#123;</span><br><span class="line">    if (targetStack != null &amp;&amp; isFocusedStack(targetStack)) &#123;</span><br><span class="line">        return targetStack.resumeTopActivityUncheckedLocked(target, targetOptions);</span><br><span class="line">    &#125;</span><br><span class="line">    final ActivityRecord r = mFocusedStack.topRunningActivityLocked();</span><br><span class="line">    if (r == null || r.state != RESUMED) &#123;</span><br><span class="line">        mFocusedStack.resumeTopActivityUncheckedLocked(null, null);</span><br><span class="line">    &#125;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ActivityStack对象是用来描述Activity堆栈的，resumeTopActivityUncheckedLocked函数如下所示。 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">boolean resumeTopActivityUncheckedLocked(ActivityRecord prev, ActivityOptions options) &#123;</span><br><span class="line">    if (mStackSupervisor.inResumeTopActivity) &#123;</span><br><span class="line">        // Don&apos;t even start recursing.</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">    boolean result = false;</span><br><span class="line">    try &#123;</span><br><span class="line">        // Protect against recursion.</span><br><span class="line">        mStackSupervisor.inResumeTopActivity = true;</span><br><span class="line">        if (mService.mLockScreenShown == ActivityManagerService.LOCK_SCREEN_LEAVING) &#123;</span><br><span class="line">            mService.mLockScreenShown = ActivityManagerService.LOCK_SCREEN_HIDDEN;</span><br><span class="line">            mService.updateSleepIfNeededLocked();</span><br><span class="line">        &#125;</span><br><span class="line">        result = resumeTopActivityInnerLocked(prev, options);</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        mStackSupervisor.inResumeTopActivity = false;</span><br><span class="line">    &#125;</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用了resumeTopActivityInnerLocked函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">private boolean resumeTopActivityInnerLocked(ActivityRecord prev, ActivityOptions options) &#123;</span><br><span class="line">    // Let&apos;s just start up the Launcher...</span><br><span class="line">    ActivityOptions.abort(options);</span><br><span class="line">    if (DEBUG_STACK) mStackSupervisor.validateTopActivitiesLocked();</span><br><span class="line">    // Only resume home if on home display</span><br><span class="line">    return isOnHomeDisplay() &amp;&amp; </span><br><span class="line">    mStackSupervisor.resumeHomeStackTask(returnTaskType, prev, reason);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>resumeTopActivityInnerLocked函数的代码很长，我们截取我们要分析的关键的一句：调用ActivityStackSupervisor的resumeHomeStackTask函数，代码如下所示。 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">boolean resumeHomeStackTask(int homeStackTaskType, ActivityRecord prev, String reason) &#123;</span><br><span class="line">    mHomeStack.moveHomeStackTaskToTop(homeStackTaskType);</span><br><span class="line">    ActivityRecord r = getHomeActivity();</span><br><span class="line">    final String myReason = reason + &quot; resumeHomeStackTask&quot;;</span><br><span class="line"></span><br><span class="line">    // Only resume home activity if isn&apos;t finishing.</span><br><span class="line">    if (r != null &amp;&amp; !r.finishing) &#123;</span><br><span class="line">        mService.setFocusedActivityLocked(r, myReason);</span><br><span class="line">        return resumeFocusedStackTopActivityLocked(mHomeStack, prev, null);</span><br><span class="line">    &#125;</span><br><span class="line">    return mService.startHomeActivityLocked(mCurrentUser, myReason);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用了ActivityManagerService的startHomeActivityLocked函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">boolean startHomeActivityLocked(int userId, String reason) &#123;</span><br><span class="line">    if (mFactoryTest == FactoryTest.FACTORY_TEST_LOW_LEVEL</span><br><span class="line">            &amp;&amp; mTopAction == null) &#123;//1</span><br><span class="line">        // We are running in factory test mode, but unable to find</span><br><span class="line">        // the factory test app, so just sit around displaying the</span><br><span class="line">        // error message and don&apos;t try to start anything.</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">    // UNIONMAN BEGIN</span><br><span class="line">    setDefaultLauncher();</span><br><span class="line">    // UNIONMAN END</span><br><span class="line">    Intent intent = getHomeIntent();//2</span><br><span class="line">    ActivityInfo aInfo = resolveActivityInfo(intent, STOCK_PM_FLAGS, userId);</span><br><span class="line">    if (aInfo != null) &#123;</span><br><span class="line">        intent.setComponent(new ComponentName(aInfo.applicationInfo.packageName, aInfo.name));</span><br><span class="line">        // Don&apos;t do this if the home app is currently being</span><br><span class="line">        // instrumented.</span><br><span class="line">        aInfo = new ActivityInfo(aInfo);</span><br><span class="line">        aInfo.applicationInfo = getAppInfoForUser(aInfo.applicationInfo, userId);</span><br><span class="line">        ProcessRecord app = getProcessRecordLocked(aInfo.processName,</span><br><span class="line">                aInfo.applicationInfo.uid, true);</span><br><span class="line">        if (app == null || app.instrumentationClass == null) &#123;//3</span><br><span class="line">            intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">            mActivityStarter.startHomeActivityLocked(intent, aInfo, reason);//4</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        Slog.wtf(TAG, &quot;No home screen found for &quot; + intent, new Throwable());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>mFactoryTest代表系统的运行模式，系统的运行模式分为三种，分别是非工厂模式、低级工厂模式和高级工厂模式，mTopAction则用来描述第一个被启动Activity组件的Action，它的值为Intent.ACTION_MAIN。因此注释1的代码意思就是mFactoryTest为FactoryTest.FACTORY_TEST_LOW_LEVEL（低级工厂模式）并且mTopAction=null时，直接返回false。getHomeIntent函数如下所示。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Intent getHomeIntent() &#123;</span><br><span class="line">    Intent intent = new Intent(mTopAction, mTopData != null ? Uri.parse(mTopData) : null);</span><br><span class="line">    intent.setComponent(mTopComponent);</span><br><span class="line">    intent.addFlags(Intent.FLAG_DEBUG_TRIAGED_MISSING);</span><br><span class="line">    if (mFactoryTest != FactoryTest.FACTORY_TEST_LOW_LEVEL) &#123;</span><br><span class="line">        intent.addCategory(Intent.CATEGORY_HOME);</span><br><span class="line">    &#125;</span><br><span class="line">    return intent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>getHomeIntent函数中创建了Intent，并将mTopAction和mTopData传入。mTopAction的值为Intent.ACTION_MAIN，并且如果系统运行模式不是低级工厂模式则将intent的Category设置为Intent.CATEGORY_HOME。我们再回到ActivityManagerService的startHomeActivityLocked函数，假设系统的运行模式不是低级工厂模式，在注释3处判断符合Action为Intent.ACTION_MAIN，Category为Intent.CATEGORY_HOME的应用程序是否已经启动，如果没启动则调用注释4的方法启动该应用程序。<br>这个被启动的应用程序就是Launcher，因为Launcher的Manifest文件中的intent-filter标签匹配了Action为Intent.ACTION_MAIN，Category为Intent.CATEGORY_HOME。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity</span><br><span class="line">    android:name=&quot;com.android.launcher2.Launcher&quot;</span><br><span class="line">    android:launchMode=&quot;singleTask&quot;</span><br><span class="line">    android:clearTaskOnLaunch=&quot;true&quot;</span><br><span class="line">    android:stateNotNeeded=&quot;true&quot;</span><br><span class="line">    android:screenOrientation=&quot;landscape&quot;&gt;</span><br><span class="line">    &lt;intent-filter&gt;</span><br><span class="line">        &lt;action android:name=&quot;android.intent.action.MAIN&quot; /&gt;</span><br><span class="line">        &lt;category android:name=&quot;android.intent.category.HOME&quot; /&gt;</span><br><span class="line">        &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;</span><br><span class="line">        &lt;category android:name=&quot;android.intent.category.MONKEY&quot;/&gt;</span><br><span class="line">    &lt;/intent-filter&gt;</span><br><span class="line">&lt;/activity&gt;</span><br></pre></td></tr></table></figure>
+<p>这样，应用程序Launcher就会被启动起来，并执行它的onCreate函数。</p>
+<h6 id="设置默认Launcher"><a href="#设置默认Launcher" class="headerlink" title="设置默认Launcher"></a>设置默认Launcher</h6><p>但是，如果我们安装了多个Launcher,那应该怎么处理？</p>
+<p>在getHomeIntent（）之前，我们可以设置一个默认Launcher。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>那么结合本篇以及本系列的前三篇文章，我们就可以得出Android系统启动流程，如下所示。 </p>
+<ol>
+<li>启动电源以及系统启动<br>当电源按下时引导芯片代码开始从预定义的地方（固化在ROM）开始执行。加载引导程序Bootloader到RAM，然后执行。 </li>
+<li>引导程序BootLoader<br>引导程序BootLoader是在Android操作系统开始运行前的一个小程序，它的主要作用是把系统OS拉起来并运行。 </li>
+<li>Linux内核启动<br>内核启动时，设置缓存、被保护存储器、计划列表、加载驱动。当内核完成系统设置，它首先在系统文件中寻找init.rc文件，并启动init进程。 </li>
+<li>init进程启动<br>初始化和启动属性服务，并且启动Zygote进程。 </li>
+<li>Zygote进程启动<br>创建JavaVM并为JavaVM注册JNI，创建服务端Socket，启动SystemServer进程。 </li>
+<li>SystemServer进程启动<br>启动Binder线程池和SystemServiceManager，并且启动各种系统服务。 </li>
+<li>Launcher启动 </li>
+</ol>
+<p><img src="/2018/03/11/Android系统启启动-Launcher/20170223132536666.png" alt="img"></p>
+<p>原文：<a href="https://blog.csdn.net/itachi85/article/details/56669808" target="_blank" rel="noopener">https://blog.csdn.net/itachi85/article/details/56669808</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Launcher/" rel="tag"># Launcher</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/05/Android系统启动-SystemServer/" rel="next" title="Android系统启动_SystemServer">
+                <i class="fa fa-chevron-left"></i> Android系统启动_SystemServer
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/03/Android进程间通通信-IPC-Socket/" rel="prev" title="Android进程间通通信(IPC)_Socket">
+                Android进程间通通信(IPC)_Socket <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#Launcher概述"><span class="nav-number">1.</span> <span class="nav-text">Launcher概述</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Launcher启动流程"><span class="nav-number">2.</span> <span class="nav-text">Launcher启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#设置默认Launcher"><span class="nav-number">2.1.</span> <span class="nav-text">设置默认Launcher</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

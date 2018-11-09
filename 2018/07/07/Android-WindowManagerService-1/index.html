@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,WMS,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言此前我用多篇文章介绍了WindowManager，这个系列我们来介绍WindowManager的管理者WMS，首先我们先来学习WMS是如何产生的。本文源码基于Android 8.0，与Android 7.1.2相比有一个比较直观的变化就是Java FrameWork采用了Lambda表达式。 WMS概述WMS是系统的其他服务，无论对于应用开发还是Framework开发都是重点的知识，它的职责有">
+<meta name="keywords" content="Android,WMS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android WindowManagerService(1)">
+<meta property="og:url" content="http://yoursite.com/2018/07/07/Android-WindowManagerService-1/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="前言此前我用多篇文章介绍了WindowManager，这个系列我们来介绍WindowManager的管理者WMS，首先我们先来学习WMS是如何产生的。本文源码基于Android 8.0，与Android 7.1.2相比有一个比较直观的变化就是Java FrameWork采用了Lambda表达式。 WMS概述WMS是系统的其他服务，无论对于应用开发还是Framework开发都是重点的知识，它的职责有">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1417629-5f42e67e8f065b27.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/1417629-f57741f3fe96198d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:updated_time" content="2018-11-08T03:49:24.317Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android WindowManagerService(1)">
+<meta name="twitter:description" content="前言此前我用多篇文章介绍了WindowManager，这个系列我们来介绍WindowManager的管理者WMS，首先我们先来学习WMS是如何产生的。本文源码基于Android 8.0，与Android 7.1.2相比有一个比较直观的变化就是Java FrameWork采用了Lambda表达式。 WMS概述WMS是系统的其他服务，无论对于应用开发还是Framework开发都是重点的知识，它的职责有">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/1417629-5f42e67e8f065b27.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/07/07/Android-WindowManagerService-1/">
+
+
+
+
+
+  <title>Android WindowManagerService(1) | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/07/Android-WindowManagerService-1/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android WindowManagerService(1)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-07T13:47:30+08:00">
+                2018-07-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/WindowManager/" itemprop="url" rel="index">
+                    <span itemprop="name">WindowManager</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h3><p>此前我用多篇文章介绍了WindowManager，这个系列我们来介绍WindowManager的管理者WMS，首先我们先来学习WMS是如何产生的。本文源码基于Android 8.0，与Android 7.1.2相比有一个比较直观的变化就是Java FrameWork采用了Lambda表达式。</p>
+<h3 id="WMS概述"><a href="#WMS概述" class="headerlink" title="WMS概述"></a><strong>WMS概述</strong></h3><p>WMS是系统的其他服务，无论对于应用开发还是Framework开发都是重点的知识，它的职责有很多，主要有以下几点：</p>
+<h4 id="窗口管理"><a href="#窗口管理" class="headerlink" title="窗口管理"></a><strong>窗口管理</strong></h4><p>WMS是窗口的管理者，它负责窗口的启动、添加和删除，另外窗口的大小和层级也是由WMS进行管理的。窗口管理的核心成员有DisplayContent、WindowToken和WindowState。</p>
+<h4 id="窗口动画"><a href="#窗口动画" class="headerlink" title="窗口动画"></a><strong>窗口动画</strong></h4><p>窗口间进行切换时，使用窗口动画可以显得更炫一些，窗口动画由WMS的动画子系统来负责，动画子系统的管理者为WindowAnimator。</p>
+<h4 id="输入系统的中转站"><a href="#输入系统的中转站" class="headerlink" title="输入系统的中转站"></a><strong>输入系统的中转站</strong></h4><p>通过对窗口的触摸从而产生触摸事件，InputManagerService（IMS）会对触摸事件进行处理，它会寻找一个最合适的窗口来处理触摸反馈信息，WMS是窗口的管理者，因此，WMS“理所应当”的成为了输入系统的中转站。</p>
+<h4 id="Surface管理"><a href="#Surface管理" class="headerlink" title="Surface管理"></a><strong>Surface管理</strong></h4><p>窗口并不具备有绘制的功能，因此每个窗口都需要有一块Surface来供自己绘制。为每个窗口分配Surface是由WMS来完成的。</p>
+<p>WMS的职责可以简单总结为下图。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/1417629-5f42e67e8f065b27.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/1417629-5f42e67e8f065b27.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="img"></a></p>
+<h3 id="WMS的诞生"><a href="#WMS的诞生" class="headerlink" title="WMS的诞生"></a><strong>WMS的诞生</strong></h3><p>WMS的知识点非常多，在了解这些知识点前，我们十分有必要知道WMS是如何产生的。WMS是在SyetemServer进程中启动的，不了解SyetemServer进程的可以查看在<a href="http://liuwangshu.cn/framework/booting/3-syetemserver.html" target="_blank" rel="noopener">Android系统启动流程（三）解析SyetemServer进程启动过程</a>这篇文章。<br>先来查看SyetemServer的main方法：<br><code>frameworks/base/services/java/com/android/server/SystemServer.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">       new SystemServer().run();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>main方法中只调用了SystemServer的run方法，如下所示。<br><code>frameworks/base/services/java/com/android/server/SystemServer.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">private void run() &#123;</span><br><span class="line">       try &#123;</span><br><span class="line">          System.loadLibrary(&quot;android_servers&quot;);//1</span><br><span class="line">          ...</span><br><span class="line">          mSystemServiceManager = new SystemServiceManager(mSystemContext);//2</span><br><span class="line">          mSystemServiceManager.setRuntimeRestarted(mRuntimeRestart);</span><br><span class="line">          LocalServices.addService(SystemServiceManager.class, mSystemServiceManager);</span><br><span class="line">          // Prepare the thread pool for init tasks that can be parallelized</span><br><span class="line">          SystemServerInitThreadPool.get();</span><br><span class="line">      &#125; finally &#123;</span><br><span class="line">          traceEnd();  // InitBeforeStartServices</span><br><span class="line">      &#125;</span><br><span class="line">      try &#123;</span><br><span class="line">          traceBeginAndSlog(&quot;StartServices&quot;);</span><br><span class="line">          startBootstrapServices();//3</span><br><span class="line">          startCoreServices();//4</span><br><span class="line">          startOtherServices();//5</span><br><span class="line">          SystemServerInitThreadPool.shutdown();</span><br><span class="line">      &#125; catch (Throwable ex) &#123;</span><br><span class="line">          Slog.e(&quot;System&quot;, &quot;******************************************&quot;);</span><br><span class="line">          Slog.e(&quot;System&quot;, &quot;************ Failure starting system services&quot;, ex);</span><br><span class="line">          throw ex;</span><br><span class="line">      &#125; finally &#123;</span><br><span class="line">          traceEnd();</span><br><span class="line">      &#125;</span><br><span class="line">  ...</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>run方法代码很多，这里截取了关键的部分，在注释1处加载了libandroid_servers.so。在注释2处创建SystemServiceManager，它会对系统的服务进行创建、启动和生命周期管理。接下来的代码会启动系统的各种服务，在注释3中的startBootstrapServices方法中用SystemServiceManager启动了ActivityManagerService、PowerManagerService、PackageManagerService等服务。在注释4处的方法中则启动了BatteryService、UsageStatsService和WebViewUpdateService。注释5处的startOtherServices方法中则启动了CameraService、AlarmManagerService、VrManagerService等服务，这些服务的父类为SystemService。从注释3、4、5的方法名称可以看出，官方把大概100多个系统服务分为了三种类型，分别是引导服务、核心服务和其他服务，其中其他服务为一些非紧要和一些不需要立即启动的服务，WMS就是其他服务的一种。<br>我们来查看startOtherServices方法是如何启动WMS的：</p>
+<p><code>frameworks/base/services/java/com/android/server/SystemServer.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"> private void startOtherServices() &#123;</span><br><span class="line"> ...</span><br><span class="line">            traceBeginAndSlog(&quot;InitWatchdog&quot;);</span><br><span class="line">            final Watchdog watchdog = Watchdog.getInstance();//1</span><br><span class="line">            watchdog.init(context, mActivityManagerService);//2</span><br><span class="line">            traceEnd();</span><br><span class="line">            traceBeginAndSlog(&quot;StartInputManagerService&quot;);</span><br><span class="line">            inputManager = new InputManagerService(context);//3</span><br><span class="line">            traceEnd();</span><br><span class="line">            traceBeginAndSlog(&quot;StartWindowManagerService&quot;);</span><br><span class="line">            ConcurrentUtils.waitForFutureNoInterrupt(mSensorServiceStart, START_SENSOR_SERVICE);</span><br><span class="line">            mSensorServiceStart = null;</span><br><span class="line">            wm = WindowManagerService.main(context, inputManager,</span><br><span class="line">                    mFactoryTestMode != FactoryTest.FACTORY_TEST_LOW_LEVEL,</span><br><span class="line">                    !mFirstBoot, mOnlyCore, new PhoneWindowManager());//4</span><br><span class="line">            ServiceManager.addService(Context.WINDOW_SERVICE, wm);//5</span><br><span class="line">            ServiceManager.addService(Context.INPUT_SERVICE, inputManager);//6</span><br><span class="line">            traceEnd();   </span><br><span class="line">           ... </span><br><span class="line">           try &#123;</span><br><span class="line">            wm.displayReady();//7</span><br><span class="line">               &#125; catch (Throwable e) &#123;</span><br><span class="line">            reportWtf(&quot;making display ready&quot;, e);</span><br><span class="line">              &#125;</span><br><span class="line">           ...</span><br><span class="line">           try &#123;</span><br><span class="line">            wm.systemReady();//8</span><br><span class="line">               &#125; catch (Throwable e) &#123;</span><br><span class="line">            reportWtf(&quot;making Window Manager Service ready&quot;, e);</span><br><span class="line">              &#125;</span><br><span class="line">            ...      </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>startOtherServices方法用于启动其他服务，其他服务大概有70多个，上面的代码只列出了WMS以及和它相关的IMS的启动逻辑，剩余的其他服务的启动逻辑也都大同小异。<br>在注释1、2处分别得到Watchdog实例并对它进行初始化，Watchdog用来监控系统的一些关键服务的运行状况，后文会再次提到它。在注释3处创建了IMS，并赋值给IMS类型的inputManager对象。注释4处执行了WMS的main方法，其内部会创建WMS，需要注意的是main方法其中一个传入的参数就是注释1处创建的IMS，WMS是输入事件的中转站，其内部包含了IMS引用并不意外。结合上文，我们可以得知WMS的main方法是运行在SystemServer的run方法中，换句话说就是运行在”system_server”线程”中，后面会再次提到”system_server”线程。<br>注释5和注释6处分别将WMS和IMS注册到ServiceManager中，这样如果某个客户端想要使用WMS，就需要先去ServiceManager中查询信息，然后根据信息与WMS所在的进程建立通信通路，客户端就可以使用WMS了。注释7处用来初始化显示信息，注释8处则用来通知WMS，系统的初始化工作已经完成，其内部调用了WindowManagerPolicy的systemReady方法。<br>我们来查看注释4处WMS的main方法，如下所示。<br><code>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService .java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public static WindowManagerService main(final Context context, final 	InputManagerService im,</span><br><span class="line">           final boolean haveInputMethods, final boolean showBootMsgs, </span><br><span class="line">           final boolean onlyCore, WindowManagerPolicy policy) &#123;</span><br><span class="line">       DisplayThread.getHandler().runWithScissors(() -&gt;//1</span><br><span class="line">               sInstance = new WindowManagerService(context, im, haveInputMethods, </span><br><span class="line">               showBootMsgs,onlyCore, policy), 0);</span><br><span class="line">       return sInstance;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>在注释1处调用了DisplayThread的getHandler方法，用来得到DisplayThread的Handler实例。DisplayThread是一个单例的前台线程，这个线程用来处理需要低延时显示的相关操作，并只能由WindowManager、DisplayManager和InputManager实时执行快速操作。注释1处的runWithScissors方法中使用了Java8中的Lambda表达式，它等价于如下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">DisplayThread.getHandler().runWithScissors(new Runnable() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">         sInstance = new WindowManagerService(context, im, haveInputMethods, </span><br><span class="line">         showBootMsgs,onlyCore, policy);//2</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, 0);</span><br></pre></td></tr></table></figure>
+<p>在注释2处创建了WMS的实例，这个过程运行在Runnable的run方法中，而Runnable则传入到了DisplayThread对应Handler的runWithScissors方法中，说明WMS的创建是运行在“android.display”线程中。需要注意的是，runWithScissors方法的第二个参数传入的是0，后面会提到。来查看Handler的runWithScissors方法里做了什么：</p>
+<p><code>frameworks/base/core/java/android/os/Handler.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public final boolean runWithScissors(final Runnable r, long timeout) &#123;</span><br><span class="line">       if (r == null) &#123;</span><br><span class="line">           throw new IllegalArgumentException(&quot;runnable must not be null&quot;);</span><br><span class="line">       &#125;</span><br><span class="line">       if (timeout &lt; 0) &#123;</span><br><span class="line">           throw new IllegalArgumentException(&quot;timeout must be non-negative&quot;);</span><br><span class="line">       &#125;</span><br><span class="line">       if (Looper.myLooper() == mLooper) &#123;//1</span><br><span class="line">           r.run();</span><br><span class="line">           return true;</span><br><span class="line">       &#125;</span><br><span class="line">       BlockingRunnable br = new BlockingRunnable(r);</span><br><span class="line">       return br.postAndWait(this, timeout);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>开头对传入的Runnable和timeout进行了判断，如果Runnable为null或者timeout小于0则抛出异常。注释1处根据每个线程只有一个Looper的原理来判断当前的线程（”system_server”线程）是否是Handler所指向的线程（”android.display”线程），如果是则直接执行Runnable的run方法，如果不是则调用BlockingRunnable的postAndWait方法，并将当前线程的Runnable作为参数传进去 ，BlockingRunnable是Handler的内部类，代码如下所示。<br><code>frameworks/base/core/java/android/os/Handler.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">private static final class BlockingRunnable implements Runnable &#123;</span><br><span class="line">        private final Runnable mTask;</span><br><span class="line">        private boolean mDone;</span><br><span class="line">        public BlockingRunnable(Runnable task) &#123;</span><br><span class="line">            mTask = task;</span><br><span class="line">        &#125;</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                mTask.run();//1</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                synchronized (this) &#123;</span><br><span class="line">                    mDone = true;</span><br><span class="line">                    notifyAll();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        public boolean postAndWait(Handler handler, long timeout) &#123;</span><br><span class="line">            if (!handler.post(this)) &#123;//2</span><br><span class="line">                return false;</span><br><span class="line">            &#125;</span><br><span class="line">            synchronized (this) &#123;</span><br><span class="line">                if (timeout &gt; 0) &#123;</span><br><span class="line">                    final long expirationTime = SystemClock.uptimeMillis() + timeout;</span><br><span class="line">                    while (!mDone) &#123;</span><br><span class="line">                        long delay = expirationTime - SystemClock.uptimeMillis();</span><br><span class="line">                        if (delay &lt;= 0) &#123;</span><br><span class="line">                            return false; // timeout</span><br><span class="line">                        &#125;</span><br><span class="line">                        try &#123;</span><br><span class="line">                            wait(delay);</span><br><span class="line">                        &#125; catch (InterruptedException ex) &#123;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    while (!mDone) &#123;</span><br><span class="line">                        try &#123;</span><br><span class="line">                            wait();//3</span><br><span class="line">                        &#125; catch (InterruptedException ex) &#123;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>注释2处将当前的BlockingRunnable添加到Handler的任务队列中。前面runWithScissors方法的第二个参数为0，因此timeout等于0，这样如果mDone为false的话会一直调用注释3处的wait方法使得当前线程（”system_server”线程）进入等待状态，那么等待的是哪个线程呢？我们往上看，注释1处，执行了传入的Runnable的run方法（运行在”android.display”线程），执行完毕后在finally代码块中将mDone设置为true，并调用notifyAll方法唤醒处于等待状态的线程，这样就不会继续调用注释3处的wait方法。因此得出结论，”system_server”线程线程等待的就是”android.display”线程，一直到”android.display”线程执行完毕再执行”system_server”线程，这是因为”android.display”线程内部执行了WMS的创建，显然WMS的创建优先级更高些。<br>WMS的创建就讲到这，最后我们来查看WMS的构造方法：</p>
+<p><code>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService .java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">private WindowManagerService(Context context, InputManagerService inputManager,</span><br><span class="line">         boolean haveInputMethods, boolean showBootMsgs, boolean onlyCore, WindowManagerPolicy policy) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mInputManager = inputManager;//1</span><br><span class="line">    ...</span><br><span class="line">     mDisplayManager = (DisplayManager)context.getSystemService(Context.DISPLAY_SERVICE);</span><br><span class="line">     mDisplays = mDisplayManager.getDisplays();//2</span><br><span class="line">     for (Display display : mDisplays) &#123;</span><br><span class="line">         createDisplayContentLocked(display);//3</span><br><span class="line">     &#125;</span><br><span class="line">    ...</span><br><span class="line">      mActivityManager = ActivityManager.getService();//4</span><br><span class="line">    ...</span><br><span class="line">     mAnimator = new WindowAnimator(this);//5</span><br><span class="line">     mAllowTheaterModeWakeFromLayout = context.getResources().getBoolean(</span><br><span class="line">             com.android.internal.R.bool.config_allowTheaterModeWakeFromWindowLayout);</span><br><span class="line">     LocalServices.addService(WindowManagerInternal.class, new LocalService());</span><br><span class="line">     initPolicy();//6</span><br><span class="line">     // Add ourself to the Watchdog monitors.</span><br><span class="line">     Watchdog.getInstance().addMonitor(this);//7</span><br><span class="line">  ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处用来保存传进来的IMS，这样WMS就持有了IMS的引用。注释2处通过DisplayManager的getDisplays方法得到Display数组（每个显示设备都有一个Display实例），接着遍历Display数组，在注释3处的createDisplayContentLocked方法会将Display封装成DisplayContent，DisplayContent用来描述一快屏幕。<br>注释4处得到AMS实例，并赋值给mActivityManager ，这样WMS就持有了AMS的引用。注释5处创建了WindowAnimator，它用于管理所有的窗口动画。注释6处初始化了窗口管理策略的接口类WindowManagerPolicy（WMP），它用来定义一个窗口策略所要遵循的通用规范。注释7处将自身也就是WMS通过addMonitor方法添加到Watchdog中，Watchdog用来监控系统的一些关键服务的运行状况（比如传入的WMS的运行状况），这些被监控的服务都会实现Watchdog.Monitor接口。Watchdog每分钟都会对被监控的系统服务进行检查，如果被监控的系统服务出现了死锁，则会杀死Watchdog所在的进程，也就是SystemServer进程。</p>
+<p>查看注释6处的initPolicy方法，如下所示。<br><code>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private void initPolicy() &#123;</span><br><span class="line">     UiThread.getHandler().runWithScissors(new Runnable() &#123;</span><br><span class="line">         @Override</span><br><span class="line">         public void run() &#123;</span><br><span class="line">             WindowManagerPolicyThread.set(Thread.currentThread(), Looper.myLooper());</span><br><span class="line">             mPolicy.init(mContext, WindowManagerService.this, WindowManagerService.this);//1</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;, 0);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>initPolicy方法和此前讲的WMS的main方法的实现类似，注释1处执行了WMP的init方法，WMP是一个接口，init方法的具体实现在PhoneWindowManager（PWM）中。PWM的init方法运行在”android.ui”线程中，它的优先级要高于initPolicy方法所在的”android.display”线程，因此”android.display”线程要等PWM的init方法执行完毕后，处于等待状态的”android.display”线程才会被唤醒从而继续执行下面的代码。</p>
+<p>在本文中共提到了3个线程，分别是”system_server”、”android.display”和”android.ui”，为了便于理解，下面给出这三个线程之间的关系。</p>
+<p><a href="http://upload-images.jianshu.io/upload_images/1417629-f57741f3fe96198d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" target="_blank" rel="noopener"><img src="http://upload-images.jianshu.io/upload_images/1417629-f57741f3fe96198d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="img"></a></p>
+<p>“system_server”线程中会调用WMS的main方法，main方法中会创建WMS，创建WMS的过程运行在”android.display”线程中，它的优先级更高一些，因此要等创建WMS完毕后才会唤醒处于等待状态的”system_server”线程。<br>WMS初始化时会执行initPolicy方法，initPolicy方法会调用PWM的init方法，这个init方法运行在”android.ui”线程，并且优先级更高，因此要先执行完PWM的init方法后，才会唤醒处于等待状态的”android.display”线程。<br>PWM的init方法执行完毕后会接着执行运行在”system_server”线程的代码，比如本文前部分提到WMS的<br>systemReady方法。</p>
+<p>原文：<a href="http://liuwangshu.cn/framework/wms/1-wms-produce.html" target="_blank" rel="noopener">http://liuwangshu.cn/framework/wms/1-wms-produce.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/WMS/" rel="tag"># WMS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/01/Android-WindowManager-3/" rel="next" title="Android WindowManager(3)">
+                <i class="fa fa-chevron-left"></i> Android WindowManager(3)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/07/Android-WindowManagerService-2/" rel="prev" title="Android WindowManagerService(2)">
+                Android WindowManagerService(2) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WMS概述"><span class="nav-number">2.</span> <span class="nav-text">WMS概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#窗口管理"><span class="nav-number">2.1.</span> <span class="nav-text">窗口管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#窗口动画"><span class="nav-number">2.2.</span> <span class="nav-text">窗口动画</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#输入系统的中转站"><span class="nav-number">2.3.</span> <span class="nav-text">输入系统的中转站</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Surface管理"><span class="nav-number">2.4.</span> <span class="nav-text">Surface管理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WMS的诞生"><span class="nav-number">3.</span> <span class="nav-text">WMS的诞生</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

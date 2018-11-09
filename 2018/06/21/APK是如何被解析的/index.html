@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,APK安装,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在本系列的前面文章中，我介绍了PackageInstaller的初始化和安装APK过程、PMS处理APK的安装和PMS的创建过程，这些文章中经常会涉及到一个类，那就是PackageParser，它用来在APK的安装过程中解析APK，那么APK是如何被解析的呢？这篇文章会给你答案。 引入PackageParserAndroid世界中有很多包，比如应用程序的APK，Android运行环境的JAR包">
+<meta name="keywords" content="Android,APK安装">
+<meta property="og:type" content="article">
+<meta property="og:title" content="APK是如何被解析的">
+<meta property="og:url" content="http://yoursite.com/2018/06/21/APK是如何被解析的/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="前言在本系列的前面文章中，我介绍了PackageInstaller的初始化和安装APK过程、PMS处理APK的安装和PMS的创建过程，这些文章中经常会涉及到一个类，那就是PackageParser，它用来在APK的安装过程中解析APK，那么APK是如何被解析的呢？这篇文章会给你答案。 引入PackageParserAndroid世界中有很多包，比如应用程序的APK，Android运行环境的JAR包">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/06/21/APK是如何被解析的/1417629-ceb50e367c2a9eb9.png">
+<meta property="og:image" content="http://yoursite.com/2018/06/21/APK是如何被解析的/1417629-1a9039e0ad81bf21.png">
+<meta property="og:image" content="http://yoursite.com/2018/06/21/APK是如何被解析的/1417629-ace548589efb7cd9.png">
+<meta property="og:updated_time" content="2018-11-08T03:00:04.240Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="APK是如何被解析的">
+<meta name="twitter:description" content="前言在本系列的前面文章中，我介绍了PackageInstaller的初始化和安装APK过程、PMS处理APK的安装和PMS的创建过程，这些文章中经常会涉及到一个类，那就是PackageParser，它用来在APK的安装过程中解析APK，那么APK是如何被解析的呢？这篇文章会给你答案。 引入PackageParserAndroid世界中有很多包，比如应用程序的APK，Android运行环境的JAR包">
+<meta name="twitter:image" content="http://yoursite.com/2018/06/21/APK是如何被解析的/1417629-ceb50e367c2a9eb9.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/21/APK是如何被解析的/">
+
+
+
+
+
+  <title>APK是如何被解析的 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/21/APK是如何被解析的/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">APK是如何被解析的</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-21T20:49:14+08:00">
+                2018-06-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a><strong>前言</strong></h3><p>在本系列的前面文章中，我介绍了PackageInstaller的初始化和安装APK过程、PMS处理APK的安装和PMS的创建过程，这些文章中经常会涉及到一个类，那就是PackageParser，它用来在APK的安装过程中解析APK，那么APK是如何被解析的呢？这篇文章会给你答案。</p>
+<h3 id="引入PackageParser"><a href="#引入PackageParser" class="headerlink" title="引入PackageParser"></a><strong>引入PackageParser</strong></h3><p>Android世界中有很多包，比如应用程序的APK，Android运行环境的JAR包（比如framework.jar）和组成Android系统的各种动态库so等等，由于包的种类和数量繁多，就需要进行包管理，但是包管理需要在内存中进行，而这些包都是以静态文件的形式存在的，就需要一个工具类将这些包转换为内存中的数据结构，这个工具就是包解析器PackageParser。</p>
+<p>在<a href="http://liuwangshu.cn/framework/pms/3-pms-install.html" target="_blank" rel="noopener">Android包管理机制（三）PMS处理APK的安装</a>这篇文章中，我们知道安装APK时需要调用PMS的installPackageLI方法：<br><code>frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">private void installPackageLI(InstallArgs args, PackageInstalledInfo res) &#123;</span><br><span class="line">    ...</span><br><span class="line">    PackageParser pp = new PackageParser();//1</span><br><span class="line">    pp.setSeparateProcesses(mSeparateProcesses);</span><br><span class="line">    pp.setDisplayMetrics(mMetrics);</span><br><span class="line">    pp.setCallback(mPackageParserCallback);</span><br><span class="line">    Trace.traceBegin(TRACE_TAG_PACKAGE_MANAGER, &quot;parsePackage&quot;);</span><br><span class="line">    final PackageParser.Package pkg;</span><br><span class="line">    try &#123;</span><br><span class="line">        pkg = pp.parsePackage(tmpPackageFile, parseFlags);//2</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到安装APK时，需要先在注释1处创建PackageParser，然后在注释2处调用PackageParser的parsePackage方法来解析APK。</p>
+<h3 id="PackageParser解析APK"><a href="#PackageParser解析APK" class="headerlink" title="PackageParser解析APK"></a><strong>PackageParser解析APK</strong></h3><p>Android5.0引入了Split APK机制，这是为了解决65536上限以及APK安装包越来越大等问题。Split APK机制可以将一个APK，拆分成多个独立APK。<br>在引入了Split APK机制后，APK有两种分类：</p>
+<ul>
+<li>Single APK：安装文件为一个完整的APK，即base APK。Android称其为Monolithic。</li>
+<li>Mutiple APK：安装文件在一个文件目录中，其内部有多个被拆分的APK，这些APK由一个 base APK和一个或多个split APK组成。Android称其为Cluster。</li>
+</ul>
+<p>了解了APK，我们接着学习PackageParser解析APK，查看PackageParser的parsePackage方法：<br><code>frameworks/base/core/java/android/content/pm/PackageParser.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public Package parsePackage(File packageFile, int flags, boolean useCaches)</span><br><span class="line">           throws PackageParserException &#123;</span><br><span class="line">       Package parsed = useCaches ? getCachedResult(packageFile, flags) : null;</span><br><span class="line">       if (parsed != null) &#123;</span><br><span class="line">           return parsed;</span><br><span class="line">       &#125;</span><br><span class="line">       if (packageFile.isDirectory()) &#123;//1</span><br><span class="line">           parsed = parseClusterPackage(packageFile, flags);</span><br><span class="line">       &#125; else &#123;</span><br><span class="line">           parsed = parseMonolithicPackage(packageFile, flags);</span><br><span class="line">       &#125;</span><br><span class="line">       cacheResult(packageFile, flags, parsed);</span><br><span class="line"></span><br><span class="line">       return parsed;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处，如果要解析的packageFile是一个目录，说明是Mutiple APK，就需要调用parseClusterPackage方法来解析，如果是Single APK则调用parseMonolithicPackage方法来解析。这里以复杂的parseClusterPackage方法为例，了解了这个方法，parseMonolithicPackage方法自然也看的懂。</p>
+<p>[<img src="/2018/06/21/APK是如何被解析的/1417629-ceb50e367c2a9eb9.png" alt="img"></p>
+<p><code>frameworks/base/core/java/android/content/pm/PackageParser.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">private Package parseClusterPackage(File packageDir, int flags) throws PackageParserException &#123;</span><br><span class="line">        final PackageLite lite = parseClusterPackageLite(packageDir, 0);//1</span><br><span class="line">       if (mOnlyCoreApps &amp;&amp; !lite.coreApp) &#123;//2</span><br><span class="line">           throw new PackageParserException(INSTALL_PARSE_FAILED_MANIFEST_MALFORMED,</span><br><span class="line">                   &quot;Not a coreApp: &quot; + packageDir);</span><br><span class="line">       &#125;</span><br><span class="line">       ...</span><br><span class="line">       try &#123;</span><br><span class="line">           final AssetManager assets = assetLoader.getBaseAssetManager();</span><br><span class="line">           final File baseApk = new File(lite.baseCodePath);</span><br><span class="line">           final Package pkg = parseBaseApk(baseApk, assets, flags);//3</span><br><span class="line">           if (pkg == null) &#123;</span><br><span class="line">               throw new PackageParserException(INSTALL_PARSE_FAILED_NOT_APK,</span><br><span class="line">                       &quot;Failed to parse base APK: &quot; + baseApk);</span><br><span class="line">           &#125;</span><br><span class="line">           if (!ArrayUtils.isEmpty(lite.splitNames)) &#123;</span><br><span class="line">               final int num = lite.splitNames.length;//4</span><br><span class="line">               pkg.splitNames = lite.splitNames;</span><br><span class="line">               pkg.splitCodePaths = lite.splitCodePaths;</span><br><span class="line">               pkg.splitRevisionCodes = lite.splitRevisionCodes;</span><br><span class="line">               pkg.splitFlags = new int[num];</span><br><span class="line">               pkg.splitPrivateFlags = new int[num];</span><br><span class="line">               pkg.applicationInfo.splitNames = pkg.splitNames;</span><br><span class="line">               pkg.applicationInfo.splitDependencies = splitDependencies;</span><br><span class="line">               for (int i = 0; i &lt; num; i++) &#123;</span><br><span class="line">                   final AssetManager splitAssets = assetLoader.getSplitAssetManager(i);</span><br><span class="line">                   parseSplitApk(pkg, i, splitAssets, flags);//5</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">           pkg.setCodePath(packageDir.getAbsolutePath());</span><br><span class="line">           pkg.setUse32bitAbi(lite.use32bitAbi);</span><br><span class="line">           return pkg;</span><br><span class="line">       &#125; finally &#123;</span><br><span class="line">           IoUtils.closeQuietly(assetLoader);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处调用parseClusterPackageLite方法用于轻量级解析目录文件，之所以要轻量级解析是因为解析APK是一个复杂耗时的操作，这里的逻辑并不需要APK所有的信息。parseClusterPackageLite方法内部会通过parseApkLite方法解析每个Mutiple APK，得到每个Mutiple APK对应的ApkLite（轻量级APK信息），然后再将这些ApkLite封装为一个PackageLite（轻量级包信息）并返回。<br>注释2处，mOnlyCoreApps用来指示PackageParser是否只解析“核心”应用，“核心”应用指的是AndroidManifest中属性coreApp值为true，只解析“核心”应用是为了创建一个极简的启动环境。mOnlyCoreApps在创建PMS时就一路传递过来，如果我们加密了设备，mOnlyCoreApps值就为true，具体的见<a href="http://liuwangshu.cn/framework/pms/4-pms-start.html" target="_blank" rel="noopener">Android包管理机制（四）PMS的创建过程</a>这篇文章的第1小节。另外可以通过PackageParser的setOnlyCoreApps方法来设置mOnlyCoreApps的值。<br><code>lite.coreApp</code>表示当前包是否包含“核心”应用，如果不满足注释2的条件就会抛出异常。<br>注释3处的parseBaseApk方法用于解析base APK，注释4处获取split APK的数量，根据这个数量在注释5处遍历调用parseSplitApk来解析每个split APK。这里主要查看parseBaseApk方法，如下所示。<br><strong>frameworks/base/core/java/android/content/pm/PackageParser.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">private Package parseBaseApk(File apkFile, AssetManager assets, int flags)</span><br><span class="line">           throws PackageParserException &#123;</span><br><span class="line">       final String apkPath = apkFile.getAbsolutePath();</span><br><span class="line">       String volumeUuid = null;</span><br><span class="line">       if (apkPath.startsWith(MNT_EXPAND)) &#123;</span><br><span class="line">           final int end = apkPath.indexOf(&apos;/&apos;, MNT_EXPAND.length());</span><br><span class="line">           volumeUuid = apkPath.substring(MNT_EXPAND.length(), end);//1</span><br><span class="line">       &#125;</span><br><span class="line">       ...</span><br><span class="line">       Resources res = null;</span><br><span class="line">       XmlResourceParser parser = null;</span><br><span class="line">       try &#123;</span><br><span class="line">           res = new Resources(assets, mMetrics, null);</span><br><span class="line">           parser = assets.openXmlResourceParser(cookie, ANDROID_MANIFEST_FILENAME);</span><br><span class="line">           final String[] outError = new String[1];</span><br><span class="line">           final Package pkg = parseBaseApk(apkPath, res, parser, flags, outError);//2</span><br><span class="line">           if (pkg == null) &#123;</span><br><span class="line">               throw new PackageParserException(mParseError,</span><br><span class="line">                       apkPath + &quot; (at &quot; + parser.getPositionDescription() + &quot;): &quot; + outError[0]);</span><br><span class="line">           &#125;</span><br><span class="line">           pkg.setVolumeUuid(volumeUuid);//3</span><br><span class="line">           pkg.setApplicationVolumeUuid(volumeUuid);//4</span><br><span class="line">           pkg.setBaseCodePath(apkPath);</span><br><span class="line">           pkg.setSignatures(null);</span><br><span class="line">           return pkg;</span><br><span class="line">       &#125; catch (PackageParserException e) &#123;</span><br><span class="line">           throw e;</span><br><span class="line">       &#125;</span><br><span class="line">       ...</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处，如果APK的路径以/mnt/expand/开头，就截取该路径获取volumeUuid，注释3处用于以后标识这个解析后的Package，注释4处的用于标识该App所在的存储卷UUID。<br>注释2处又调用了parseBaseApk的重载方法，可以看出当前的parseBaseApk方法主要是为了获取和设置volumeUuid。parseBaseApk的重载方法如下所示。<br><strong>frameworks/base/core/java/android/content/pm/PackageParser.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">private Package parseBaseApk(String apkPath, Resources res, XmlResourceParser parser, int flags,</span><br><span class="line">           String[] outError) throws XmlPullParserException, IOException &#123;</span><br><span class="line">       ...</span><br><span class="line">       final Package pkg = new Package(pkgName);//1</span><br><span class="line">       //从资源中提取自定义属性集com.android.internal.R.styleable.AndroidManifest得到TypedArray </span><br><span class="line">       TypedArray sa = res.obtainAttributes(parser,</span><br><span class="line">               com.android.internal.R.styleable.AndroidManifest);//2</span><br><span class="line">       //使用typedarray获取AndroidManifest中的versionCode赋值给Package的对应属性        </span><br><span class="line">       pkg.mVersionCode = pkg.applicationInfo.versionCode = sa.getInteger(</span><br><span class="line">               com.android.internal.R.styleable.AndroidManifest_versionCode, 0);</span><br><span class="line">       pkg.baseRevisionCode = sa.getInteger(</span><br><span class="line">               com.android.internal.R.styleable.AndroidManifest_revisionCode, 0);</span><br><span class="line">       pkg.mVersionName = sa.getNonConfigurationString(</span><br><span class="line">               com.android.internal.R.styleable.AndroidManifest_versionName, 0);</span><br><span class="line">       if (pkg.mVersionName != null) &#123;</span><br><span class="line">           pkg.mVersionName = pkg.mVersionName.intern();</span><br><span class="line">       &#125;</span><br><span class="line">       pkg.coreApp = parser.getAttributeBooleanValue(null, &quot;coreApp&quot;, false);//3</span><br><span class="line">       //获取资源后要回收</span><br><span class="line">       sa.recycle();</span><br><span class="line">       return parseBaseApkCommon(pkg, null, res, parser, flags, outError);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处创建了Package对象，注释2处从资源中提取自定义属性集 com.android.internal.R.styleable.AndroidManifest得到TypedArray ，这个属性集所在的源码位置为frameworks/base/core/res/res/values/attrs_manifest.xml。接着用TypedArray读取APK的AndroidManifest中的versionCode、revisionCode和versionName的值赋值给Package的对应的属性。<br>注释3处读取APK的AndroidManifest中的coreApp的值。<br>最后会调用parseBaseApkCommon方法，这个方法非常长，主要用来解析APK的AndroidManifest中的各个<br>标签，比如application、permission、uses-sdk、feature-group等等，其中四大组件的标签在application标签下，解析application标签的方法为parseBaseApplication。<br><strong>frameworks/base/core/java/android/content/pm/PackageParser.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">  private boolean parseBaseApplication(Package owner, Resources res,</span><br><span class="line">            XmlResourceParser parser, int flags, String[] outError)</span><br><span class="line">        throws XmlPullParserException, IOException &#123;</span><br><span class="line">        ...</span><br><span class="line">        while ((type = parser.next()) != XmlPullParser.END_DOCUMENT</span><br><span class="line">                &amp;&amp; (type != XmlPullParser.END_TAG || parser.getDepth() &gt; innerDepth)) &#123;</span><br><span class="line">            if (type == XmlPullParser.END_TAG || type == XmlPullParser.TEXT) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            String tagName = parser.getName();</span><br><span class="line">            if (tagName.equals(&quot;activity&quot;)) &#123;//1</span><br><span class="line">                Activity a = parseActivity(owner, res, parser, flags, outError, false,</span><br><span class="line">                        owner.baseHardwareAccelerated);//2</span><br><span class="line">                if (a == null) &#123;</span><br><span class="line">                    mParseError = PackageManager.INSTALL_PARSE_FAILED_MANIFEST_MALFORMED;</span><br><span class="line">                    return false;</span><br><span class="line">                &#125;</span><br><span class="line">                owner.activities.add(a);//3</span><br><span class="line">            &#125; else if (tagName.equals(&quot;receiver&quot;)) &#123;</span><br><span class="line">                Activity a = parseActivity(owner, res, parser, flags, outError, true, false);</span><br><span class="line">                if (a == null) &#123;</span><br><span class="line">                    mParseError = PackageManager.INSTALL_PARSE_FAILED_MANIFEST_MALFORMED;</span><br><span class="line">                    return false;</span><br><span class="line">                &#125;</span><br><span class="line">                owner.receivers.add(a);</span><br><span class="line">            &#125; else if (tagName.equals(&quot;service&quot;)) &#123;</span><br><span class="line">                Service s = parseService(owner, res, parser, flags, outError);</span><br><span class="line">                if (s == null) &#123;</span><br><span class="line">                    mParseError = PackageManager.INSTALL_PARSE_FAILED_MANIFEST_MALFORMED;</span><br><span class="line">                    return false;</span><br><span class="line">                &#125;</span><br><span class="line">                owner.services.add(s);</span><br><span class="line">            &#125; else if (tagName.equals(&quot;provider&quot;)) &#123;</span><br><span class="line">                Provider p = parseProvider(owner, res, parser, flags, outError);</span><br><span class="line">                if (p == null) &#123;</span><br><span class="line">                    mParseError = PackageManager.INSTALL_PARSE_FAILED_MANIFEST_MALFORMED;</span><br><span class="line">                    return false;</span><br><span class="line">                &#125;</span><br><span class="line">                owner.providers.add(p);</span><br><span class="line">             ...</span><br><span class="line">            &#125; </span><br><span class="line">        &#125;</span><br><span class="line">     ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>parseBaseApplication方法有近500行代码，这里只截取了解析四大组件相关的代码。注释1处如果标签名为activity，就调用注释2处的parseActivity方法解析activity标签并得到一个Activity对象（PackageParser的静态内部类），这个方法有300多行代码，解析一个activity标签就如此繁琐，activity标签只是Application中众多标签的一个，而Application只是AndroidManifest众多标签的一个，这让我们更加理解了为什么此前解析APK时要使用轻量级解析了。注释3处将解析得到的Activity对象保存在Package的列表activities中。其他的四大组件也是类似的逻辑。<br>PackageParser解析APK的代码逻辑非常庞大，基本了解本文所讲的就足够了，如果有兴趣可以自行看源码。<br>parseBaseApk方法主要的解析结构可以理解为以下简图。<br><a href=""><img src="/2018/06/21/APK是如何被解析的/1417629-1a9039e0ad81bf21.png" alt="img"></a></p>
+<h3 id="Package的数据结构"><a href="#Package的数据结构" class="headerlink" title="Package的数据结构"></a><strong>Package的数据结构</strong></h3><p>包被解析后，最终在内存是Package，Package是PackageParser的内部类，它的部分成员变量如下所示。<br><strong>frameworks/base/core/java/android/content/pm/PackageParser.java</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public final static class Package implements Parcelable &#123;</span><br><span class="line">    public String packageName;</span><br><span class="line">    public String manifestPackageName;</span><br><span class="line">    public String[] splitNames;</span><br><span class="line">    public String volumeUuid;</span><br><span class="line">    public String codePath;</span><br><span class="line">    public String baseCodePath;</span><br><span class="line">    ...</span><br><span class="line">    public ApplicationInfo applicationInfo = new ApplicationInfo();</span><br><span class="line">    public final ArrayList&lt;Permission&gt; permissions = new ArrayList&lt;Permission&gt;(0);</span><br><span class="line">    public final ArrayList&lt;PermissionGroup&gt; permissionGroups = new ArrayList&lt;PermissionGroup&gt;(0);</span><br><span class="line">    public final ArrayList&lt;Activity&gt; activities = new ArrayList&lt;Activity&gt;(0);//1</span><br><span class="line">    public final ArrayList&lt;Activity&gt; receivers = new ArrayList&lt;Activity&gt;(0);</span><br><span class="line">    public final ArrayList&lt;Provider&gt; providers = new ArrayList&lt;Provider&gt;(0);</span><br><span class="line">    public final ArrayList&lt;Service&gt; services = new ArrayList&lt;Service&gt;(0);</span><br><span class="line">    public final ArrayList&lt;Instrumentation&gt; instrumentation = new ArrayList&lt;Instrumentation&gt;(0);</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处，activities列表中存储了类型为Activity的对象，需要注意的是这个Acticity并不是我们常用的那个Activity，而是PackageParser的静态内部类，Package中的其他列表也都是如此。Package的数据结构简图如下所示。<br><img src="/2018/06/21/APK是如何被解析的/1417629-ace548589efb7cd9.png" alt="img"></p>
+<p>从这个简图中可以发现Package的数据结构是如何设计的：</p>
+<ul>
+<li>Package中存有许多组件，比如Acticity、Provider、Permission等等，它们都继承基类Component。</li>
+<li>每个组件都包含一个info数据，比如Activity类中包含了成员变量ActivityInfo，这个ActivityInfo才是真正的Activity数据。</li>
+<li>四大组件的标签内可能包含<code>&lt;intent-filter&gt;</code>来过滤Intent信息，因此需要IntentInfo来保存组件的intent信息，组件基类Component依赖于IntentInfo，IntentInfo有三个子类ActivityIntentInfo、ServiceIntentInfo和ProviderIntentInfo，不同组件依赖的IntentInfo会有所不同，比如Activity继承自<code>Component&lt;ActivityIntentInfo&gt;</code> ，Permission继承自<code>Component&lt;IntentInfo&gt;</code> 。</li>
+</ul>
+<p>最终的解析的数据会封装到Package中，除此之外在解析过程中还有两个轻量级数据结构ApkLite和PackageLite，因为这两个数据和Package没有太大的关联就没有在上图中表示。</p>
+<p>原文：<a href="http://liuwangshu.cn/framework/pms/5-packageparser.html" target="_blank" rel="noopener">http://liuwangshu.cn/framework/pms/5-packageparser.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/APK安装/" rel="tag"># APK安装</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/18/PackageInstaller安装APK/" rel="next" title="PackageInstaller安装APK">
+                <i class="fa fa-chevron-left"></i> PackageInstaller安装APK
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/23/PackageInstaller的初始化/" rel="prev" title="PackageInstaller的初始化">
+                PackageInstaller的初始化 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#引入PackageParser"><span class="nav-number">2.</span> <span class="nav-text">引入PackageParser</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PackageParser解析APK"><span class="nav-number">3.</span> <span class="nav-text">PackageParser解析APK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Package的数据结构"><span class="nav-number">4.</span> <span class="nav-text">Package的数据结构</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
