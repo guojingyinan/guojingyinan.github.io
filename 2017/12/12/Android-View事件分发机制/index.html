@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="android,事件分发机制,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="处理点击事件的方法View的层级我们知道View的结构是树形的结构，View可以放在ViewGroup中，这个ViewGroup也可以放到另一个ViewGroup中，这样层层的嵌套就组成了View的层级。 什么是点击事件分发当我们点击屏幕，就产生了触摸事件，这个事件被封装成了一个类：MotionEvent。而当这个MotionEvent产生后，那么系统就会将这个MotionEvent传递给View">
+<meta name="keywords" content="android,事件分发机制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android View事件分发机制">
+<meta property="og:url" content="http://yoursite.com/2017/12/12/Android-View事件分发机制/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="处理点击事件的方法View的层级我们知道View的结构是树形的结构，View可以放在ViewGroup中，这个ViewGroup也可以放到另一个ViewGroup中，这样层层的嵌套就组成了View的层级。 什么是点击事件分发当我们点击屏幕，就产生了触摸事件，这个事件被封装成了一个类：MotionEvent。而当这个MotionEvent产生后，那么系统就会将这个MotionEvent传递给View">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-12T12:00:32.702Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android View事件分发机制">
+<meta name="twitter:description" content="处理点击事件的方法View的层级我们知道View的结构是树形的结构，View可以放在ViewGroup中，这个ViewGroup也可以放到另一个ViewGroup中，这样层层的嵌套就组成了View的层级。 什么是点击事件分发当我们点击屏幕，就产生了触摸事件，这个事件被封装成了一个类：MotionEvent。而当这个MotionEvent产生后，那么系统就会将这个MotionEvent传递给View">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/12/12/Android-View事件分发机制/">
+
+
+
+
+
+  <title>Android View事件分发机制 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/12/Android-View事件分发机制/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android View事件分发机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-12T19:02:04+08:00">
+                2017-12-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/View/" itemprop="url" rel="index">
+                    <span itemprop="name">View</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="处理点击事件的方法"><a href="#处理点击事件的方法" class="headerlink" title="处理点击事件的方法"></a>处理点击事件的方法</h3><h4 id="View的层级"><a href="#View的层级" class="headerlink" title="View的层级"></a>View的层级</h4><p>我们知道View的结构是树形的结构，View可以放在ViewGroup中，这个ViewGroup也可以放到另一个ViewGroup中，这样层层的嵌套就组成了View的层级。</p>
+<h4 id="什么是点击事件分发"><a href="#什么是点击事件分发" class="headerlink" title="什么是点击事件分发"></a>什么是点击事件分发</h4><p>当我们点击屏幕，就产生了触摸事件，这个事件被封装成了一个类：MotionEvent。而当这个MotionEvent产生后，那么系统就会将这个MotionEvent传递给View的层级，MotionEvent在View的层级传递的过程就是点击事件分发。</p>
+<h4 id="点击事件分发的重要方法"><a href="#点击事件分发的重要方法" class="headerlink" title="点击事件分发的重要方法"></a>点击事件分发的重要方法</h4><p>点击事件有三个重要的方法它们分别是：</p>
+<ul>
+<li>dispatchTouchEvent(MotionEvent ev)：用来进行事件的分发</li>
+<li>onInterceptTouchEvent(MotionEvent ev)：用来进行事件的拦截，在dispatchTouchEvent()中调用，需要注意的是View没有提供该方法</li>
+<li>onTouchEvent(MotionEvent ev)：用来处理点击事件，在dispatchTouchEvent()方法中进行调用</li>
+</ul>
+<p>为了了解这三个方法的关系，我们先来看看ViewGroup的dispatchTouchEvent()方法的部分源码</p>
+<p><code>\frameworks\base\core\java\android\view\ViewGroup.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public boolean dispatchTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">    if (actionMasked == MotionEvent.ACTION_DOWN|| mFirstTouchTarget != null) &#123;</span><br><span class="line">        final boolean disallowIntercept = (mGroupFlags &amp; FLAG_DISALLOW_INTERCEPT) != 0;</span><br><span class="line">        if (!disallowIntercept) &#123;</span><br><span class="line">            intercepted = onInterceptTouchEvent(ev);</span><br><span class="line">            ev.setAction(action); // restore action in case it was changed</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            intercepted = false;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // There are no touch targets and this action is not an initial down</span><br><span class="line">        // so this view group continues to intercept touches.</span><br><span class="line">        intercepted = true;</span><br><span class="line">    &#125;</span><br><span class="line">    	return handled;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在dispatchTouchEvent()方法中调用了onInterceptTouchEvent()方法来判断是否拦截事件，来看看onInterceptTouchEvent()方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public boolean onInterceptTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">    if (ev.isFromSource(InputDevice.SOURCE_MOUSE)</span><br><span class="line">    	&amp;&amp; ev.getAction() == MotionEvent.ACTION_DOWN</span><br><span class="line">    	&amp;&amp; ev.isButtonPressed(MotionEvent.BUTTON_PRIMARY)</span><br><span class="line">    	&amp;&amp; isOnScrollbarThumb(ev.getX(), ev.getY())) &#123;</span><br><span class="line">    		return true;</span><br><span class="line">    &#125;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>除了鼠标事件，onInterceptTouchEvent()方法默认返回false，不进行拦截，接着来看看dispatchTouchEvent()方法剩余的部分源码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"> public boolean dispatchTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">     ...</span><br><span class="line">     final View[] children = mChildren;</span><br><span class="line">     for (int i = childrenCount - 1; i &gt;= 0; i--) &#123;</span><br><span class="line">         final int childIndex = customOrder</span><br><span class="line">         ? getChildDrawingOrder(childrenCount, i) : i;</span><br><span class="line">         final View child = (preorderedList == null)</span><br><span class="line">         ? children[childIndex] : preorderedList.get(childIndex);</span><br><span class="line"></span><br><span class="line">        // If there is a view that has accessibility focus we want it</span><br><span class="line">        // to get the event first and if not handled we will perform a</span><br><span class="line">        // normal dispatch. We may do a double iteration but this is</span><br><span class="line">        // safer given the timeframe.</span><br><span class="line">        if (childWithAccessibilityFocus != null) &#123;</span><br><span class="line">            if (childWithAccessibilityFocus != child) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            childWithAccessibilityFocus = null;</span><br><span class="line">            i = childrenCount - 1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (!canViewReceivePointerEvents(child)</span><br><span class="line">            || !isTransformedTouchPointInView(x, y, child, null)) &#123;</span><br><span class="line">                ev.setTargetAccessibilityFocus(false);</span><br><span class="line">                continue;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        newTouchTarget = getTouchTarget(child);</span><br><span class="line">        if (newTouchTarget != null) &#123;</span><br><span class="line">            // Child is already receiving touch within its bounds.</span><br><span class="line">            // Give it the new pointer in addition to the ones it is handling.</span><br><span class="line">            newTouchTarget.pointerIdBits |= idBitsToAssign;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        resetCancelNextUpFlag(child);</span><br><span class="line">        if (dispatchTransformedTouchEvent(ev, false, child, idBitsToAssign)) &#123;//1</span><br><span class="line">            // Child wants to receive touch within its bounds.</span><br><span class="line">            mLastTouchDownTime = ev.getDownTime();</span><br><span class="line">            if (preorderedList != null) &#123;</span><br><span class="line">                // childIndex points into presorted list, find original index</span><br><span class="line">                for (int j = 0; j &lt; childrenCount; j++) &#123;</span><br><span class="line">                    if (children[childIndex] == mChildren[j]) &#123;</span><br><span class="line">                        mLastTouchDownIndex = j;</span><br><span class="line">                        break;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                mLastTouchDownIndex = childIndex;</span><br><span class="line">            &#125;</span><br><span class="line">            mLastTouchDownX = ev.getX();</span><br><span class="line">            mLastTouchDownY = ev.getY();</span><br><span class="line">            newTouchTarget = addTouchTarget(child, idBitsToAssign);</span><br><span class="line">            alreadyDispatchedToNewTouchTarget = true;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // The accessibility focus didn&apos;t handle the event, so clear</span><br><span class="line">        // the flag and do a normal dispatch to all children.</span><br><span class="line">        ev.setTargetAccessibilityFocus(false);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...省略</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们看到了for循环，首先遍历ViewGroup的子元素，判断子元素是否能够接收到点击事件，如果子元素能够接收到则交由子元素来处理。接下来看看注释1的dispatchTransformedTouchEvent()方法中实现了什么：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">private boolean dispatchTransformedTouchEvent(MotionEvent event, boolean cancel,</span><br><span class="line">    View child, int desiredPointerIdBits) &#123;</span><br><span class="line">       final boolean handled;</span><br><span class="line"></span><br><span class="line">       // Canceling motions is a special case.  We don&apos;t need to perform any transformations</span><br><span class="line">       // or filtering.  The important part is the action, not the contents.</span><br><span class="line">       final int oldAction = event.getAction();</span><br><span class="line">       if (cancel || oldAction == MotionEvent.ACTION_CANCEL) &#123;</span><br><span class="line">           event.setAction(MotionEvent.ACTION_CANCEL);</span><br><span class="line">           if (child == null) &#123;</span><br><span class="line">               handled = dispatchTouchEvent(event);</span><br><span class="line">           &#125; else &#123;</span><br><span class="line">               handled = child.dispatchTouchEvent(event);</span><br><span class="line">           &#125;</span><br><span class="line">           event.setAction(oldAction);</span><br><span class="line">           return handled;</span><br><span class="line">       &#125;</span><br><span class="line"> ...省略      </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果有子View则调用子View的dispatchTouchEvent(event)方法。如果ViewGroup没有子View则调用super.dispatchTouchEvent(event)，ViewGroup是继承View的，我们再来看看View的dispatchTouchEvent(event)：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public boolean dispatchTouchEvent(MotionEvent event) &#123;</span><br><span class="line">      ...省略</span><br><span class="line">       boolean result = false;</span><br><span class="line">       if (onFilterTouchEventForSecurity(event)) &#123;</span><br><span class="line">           //noinspection SimplifiableIfStatement</span><br><span class="line">           ListenerInfo li = mListenerInfo;</span><br><span class="line">           if (li != null &amp;&amp; li.mOnTouchListener != null</span><br><span class="line">                   &amp;&amp; (mViewFlags &amp; ENABLED_MASK) == ENABLED</span><br><span class="line">                   &amp;&amp; li.mOnTouchListener.onTouch(this, event)) &#123;</span><br><span class="line">               result = true;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           if (!result &amp;&amp; onTouchEvent(event)) &#123;</span><br><span class="line">               result = true;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">    ...省略</span><br><span class="line">       return result;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>我们看到如果OnTouchListener不为null并且onTouch()方法返回true，则表示事件被消费，就不会执行onTouchEvent(event)，否则就会执行onTouchEvent(event)。再来看看onTouchEvent()方法的部分源码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public boolean onTouchEvent(MotionEvent event) &#123;</span><br><span class="line">    ...</span><br><span class="line">   final int action = event.getAction();</span><br><span class="line">   if (((viewFlags &amp; CLICKABLE) == CLICKABLE ||</span><br><span class="line">		   (viewFlags &amp; LONG_CLICKABLE) == LONG_CLICKABLE) ||</span><br><span class="line">		   (viewFlags &amp; CONTEXT_CLICKABLE) == CONTEXT_CLICKABLE) &#123;</span><br><span class="line">	   switch (action) &#123;</span><br><span class="line">		   case MotionEvent.ACTION_UP:</span><br><span class="line">			   boolean prepressed = (mPrivateFlags &amp; PFLAG_PREPRESSED) != 0;</span><br><span class="line">			   if ((mPrivateFlags &amp; PFLAG_PRESSED) != 0 || prepressed) &#123;</span><br><span class="line">				   // take focus if we don&apos;t have it already and we should in</span><br><span class="line">				   // touch mode.</span><br><span class="line">				   boolean focusTaken = false;</span><br><span class="line">				  </span><br><span class="line">				   if (!mHasPerformedLongPress &amp;&amp; !mIgnoreNextUpEvent) &#123;</span><br><span class="line">					   // This is a tap, so remove the longpress check</span><br><span class="line">					   removeLongPressCallback();</span><br><span class="line"></span><br><span class="line">					 // Only perform take click actions if we were in the pressed state</span><br><span class="line">					   if (!focusTaken) &#123;</span><br><span class="line">						   // Use a Runnable and post this rather than calling</span><br><span class="line">						   // performClick directly. This lets other visual state</span><br><span class="line">						   // of the view update before click actions start.</span><br><span class="line">						   if (mPerformClick == null) &#123;</span><br><span class="line">							   mPerformClick = new PerformClick();</span><br><span class="line">						   &#125;</span><br><span class="line">						   if (!post(mPerformClick)) &#123;</span><br><span class="line">							   performClick();</span><br><span class="line">						   &#125;</span><br><span class="line">					   &#125;</span><br><span class="line">				   &#125;</span><br><span class="line">       ...   </span><br><span class="line">       &#125;</span><br><span class="line">   	return true;</span><br><span class="line">  &#125;          </span><br><span class="line">  return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面可以看到只要View的CLICKABLE和LONG_CLICKABLE一个为true，那么onTouchEvent就会返回true消耗这个事件。CLICKABLE和LONG_CLICKABLE代表View可以被点击和长按点击，可以通过View的setClickable和setLongClickable方法来设置，也可以通过View的setOnClickListenter和setOnLongClickListener来设置，他们会自动将View的设置为CLICKABLE和LONG_CLICKABLE。<br>接着在ACTION_UP事件会调用performClick()方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public boolean performClick() &#123;</span><br><span class="line">	final boolean result;</span><br><span class="line">	final ListenerInfo li = mListenerInfo;</span><br><span class="line">	if (li != null &amp;&amp; li.mOnClickListener != null) &#123;</span><br><span class="line">		playSoundEffect(SoundEffectConstants.CLICK);</span><br><span class="line">		li.mOnClickListener.onClick(this);</span><br><span class="line">		result = true;</span><br><span class="line">	&#125; else &#123;</span><br><span class="line">		result = false;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);</span><br><span class="line">	return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果View设置了点击事件OnClickListener，那么它的onClick()方法就会被执行。</p>
+<h3 id="点击事件分发的传递规则"><a href="#点击事件分发的传递规则" class="headerlink" title="点击事件分发的传递规则"></a>点击事件分发的传递规则</h3><p>看到这里我们就可以知道点击事件分发的这三个重要方法的关系，用伪代码来简单表示就是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public boolean dispatchTouchEvent(MotionEvent ev) &#123;</span><br><span class="line">boolean result=false;</span><br><span class="line">if(onInterceptTouchEvent(ev))&#123;</span><br><span class="line">      result=onTouchEvent(ev);</span><br><span class="line"></span><br><span class="line"> &#125;else&#123;</span><br><span class="line">      result=child.dispatchTouchEvent(ev);</span><br><span class="line">&#125;</span><br><span class="line">return result;</span><br></pre></td></tr></table></figure>
+<h4 id="点击事件由上而下的传递规则"><a href="#点击事件由上而下的传递规则" class="headerlink" title="点击事件由上而下的传递规则"></a>点击事件由上而下的传递规则</h4><p>当点击事件产生后会由Activity来处理在传递给Window再传递给顶层的ViewGroup，一般在事件传递中只考虑ViewGroup的onInterceptTouchEvent()方法，因为一般情况我们不会去重写dispatchTouchEvent()方法。<br>对于根ViewGroup，点击事件首先传递给它的dispatchTouchEvent()方法，如果该ViewGroup的onInterceptTouchEvent()方法返回true，则表示它要拦截这个事件，这个事件就会交给它的onTouchEvent()方法处理，如果onInterceptTouchEvent()方法返回false，则表示它不拦截这个事件，则交给它的子元素的dispatchTouchEvent()来处理，如此的反复下去。如果传递给最底层的View，View是没有子View的，就会调用View的dispatchTouchEvent()方法，一般情况下最终会调用View的onTouchEvent()方法。</p>
+<p>举个现实的例子，就是我们的应用产生了重大的bug，这个bug首先会汇报给技术总监那：</p>
+<p>技术总监（顶层ViewGroup)→技术经理（中层ViewGroup)→工程师（底层View)<br>技术总监不拦截，把bug分给了技术经理，技术经理不拦截把bug分给了工程师，工程师没有下属只有自己处理了。<br>事件由上而下传递返回值规则为：true，拦截，不继续向下传递；false，不拦截，继续向下传递。</p>
+<h4 id="点击事件由下而上的传递规则"><a href="#点击事件由下而上的传递规则" class="headerlink" title="点击事件由下而上的传递规则"></a>点击事件由下而上的传递规则</h4><p>点击事件传给最底层的View，如果他的onTouchEvent()方法返回true，则事件由最底层的View消耗并处理了，如果返回false则表示该View不做处理，则传递给父View的onTouchEvent()处理，如果父View的onTouchEvent()仍旧返回返回false，则继续传递给改父View的父View处理，如此的反复下去。</p>
+<p>再返回我们现实的例子，工程师发现这个bug太难搞不定（onTouchEvent()返回false)，他只能交给上级技术经理处理，如果技术经理也搞不定（onTouchEvent()返回false)，那就把bug传给技术总监，技术总监一看bug很简单就解决了（onTouchEvent()返回true)。</p>
+<p>事件由下而上传递返回值规则为：true，处理了，不继续向上传递；false，不处理，继续向上传递。</p>
+<h4 id="点击事件传递时的其他问题"><a href="#点击事件传递时的其他问题" class="headerlink" title="点击事件传递时的其他问题"></a><strong>点击事件传递时的其他问题</strong></h4><ul>
+<li>上面源码我们看到：如果我们设置了OnTouchListener并且onTouch()方法返回true，则onTouchEvent()方法不会被调用，否则则会调用onTouchEvent()方法，可见OnTouchListener的优先级要比onTouchEvent()要高。在OnTouchEvent()方法中，如果当前设置了OnClickListener则会执行它的onClick()方法。</li>
+<li>View的OnTouchEvent()方法默认都会返回true，除非它是不可点击的也就是CLICKABLE和LONG_CLICKABLE都为false。</li>
+</ul>
+<p>原文：<a href="http://liuwangshu.cn/application/view/5-dispatchingevents.html" target="_blank" rel="noopener">http://liuwangshu.cn/application/view/5-dispatchingevents.html</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+            <a href="/tags/事件分发机制/" rel="tag"># 事件分发机制</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/04/Android深入理解JNI/" rel="next" title="Android深入理解JNI">
+                <i class="fa fa-chevron-left"></i> Android深入理解JNI
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/08/Android-Butterknife使用/" rel="prev" title="Android Butterknife使用">
+                Android Butterknife使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#处理点击事件的方法"><span class="nav-number">1.</span> <span class="nav-text">处理点击事件的方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#View的层级"><span class="nav-number">1.1.</span> <span class="nav-text">View的层级</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是点击事件分发"><span class="nav-number">1.2.</span> <span class="nav-text">什么是点击事件分发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#点击事件分发的重要方法"><span class="nav-number">1.3.</span> <span class="nav-text">点击事件分发的重要方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#点击事件分发的传递规则"><span class="nav-number">2.</span> <span class="nav-text">点击事件分发的传递规则</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#点击事件由上而下的传递规则"><span class="nav-number">2.1.</span> <span class="nav-text">点击事件由上而下的传递规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#点击事件由下而上的传递规则"><span class="nav-number">2.2.</span> <span class="nav-text">点击事件由下而上的传递规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#点击事件传递时的其他问题"><span class="nav-number">2.3.</span> <span class="nav-text">点击事件传递时的其他问题</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

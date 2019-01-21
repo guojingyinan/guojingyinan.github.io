@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="android系统的键值转换，从linux到java共经历3个层次，分别是：  linux系统层，原始ir键值读取,转变为linux层键值 framework层,linux层键值转换为android键值 framework层,android键值上报java层  原始ir键值读取,转变为linux层键值  核心输入: 系统启动android_ir_user后台进程   核心输出: 虚拟设备dev/v">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android系统按键(海思为例)上报流程">
+<meta property="og:url" content="http://yoursite.com/2019/01/18/Android系统按键-海思为例-上报流程/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="android系统的键值转换，从linux到java共经历3个层次，分别是：  linux系统层，原始ir键值读取,转变为linux层键值 framework层,linux层键值转换为android键值 framework层,android键值上报java层  原始ir键值读取,转变为linux层键值  核心输入: 系统启动android_ir_user后台进程   核心输出: 虚拟设备dev/v">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/01/18/Android系统按键-海思为例-上报流程/1.png">
+<meta property="og:updated_time" content="2019-01-21T06:13:01.201Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android系统按键(海思为例)上报流程">
+<meta name="twitter:description" content="android系统的键值转换，从linux到java共经历3个层次，分别是：  linux系统层，原始ir键值读取,转变为linux层键值 framework层,linux层键值转换为android键值 framework层,android键值上报java层  原始ir键值读取,转变为linux层键值  核心输入: 系统启动android_ir_user后台进程   核心输出: 虚拟设备dev/v">
+<meta name="twitter:image" content="http://yoursite.com/2019/01/18/Android系统按键-海思为例-上报流程/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/01/18/Android系统按键-海思为例-上报流程/">
+
+
+
+
+
+  <title>Android系统按键(海思为例)上报流程 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/18/Android系统按键-海思为例-上报流程/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android系统按键(海思为例)上报流程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-18T20:18:34+08:00">
+                2019-01-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android输入事件/" itemprop="url" rel="index">
+                    <span itemprop="name">Android输入事件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>android系统的键值转换，从linux到java共经历3个层次，分别是：</p>
+<ul>
+<li>linux系统层，原始ir键值读取,转变为linux层键值</li>
+<li>framework层,linux层键值转换为android键值</li>
+<li>framework层,android键值上报java层</li>
+</ul>
+<h3 id="原始ir键值读取-转变为linux层键值"><a href="#原始ir键值读取-转变为linux层键值" class="headerlink" title="原始ir键值读取,转变为linux层键值"></a>原始ir键值读取,转变为linux层键值</h3><p>  核心输入: 系统启动android_ir_user后台进程</p>
+<p>  核心输出: 虚拟设备dev/vinput,写入linux键值</p>
+<p>转换流程详细说明:</p>
+<h4 id="定义原始硬件码值和对应linux层通用键名"><a href="#定义原始硬件码值和对应linux层通用键名" class="headerlink" title="定义原始硬件码值和对应linux层通用键名"></a>定义原始硬件码值和对应linux层通用键名</h4><p><code>/device/hisilicon/bigfish/system/ir_user/key_pars/key.xml</code></p>
+<p>该文件编译后输出到<code>system/etc</code>目录下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span><br><span class="line">&lt;key_xml&gt;</span><br><span class="line">    &lt;hisi-key&gt;</span><br><span class="line">        &lt;key value=&quot;0x35caff00&quot; name=&quot;KEY_UP&quot;         /&gt;      &lt;!--key up--&gt;</span><br><span class="line">        &lt;key value=&quot;0x2dd2ff00&quot; name=&quot;KEY_DOWN&quot;       /&gt;      &lt;!--key down--&gt;</span><br><span class="line">        &lt;key value=&quot;0x3ec1ff00&quot; name=&quot;KEY_RIGHT&quot;      /&gt;      &lt;!--key right--&gt;</span><br><span class="line">		...</span><br><span class="line">        &lt;key value=&quot;0x7d82ff00&quot; name=&quot;KEY_FN_B&quot;       /&gt;      &lt;!-- --&gt;</span><br><span class="line">        &lt;key value=&quot;0x639c4db2&quot; name=&quot;KEY_MUTE&quot;       /&gt;      &lt;!-- --&gt;</span><br><span class="line">    &lt;/hisi-key&gt;</span><br></pre></td></tr></table></figure>
+<h4 id="定义linux层通用键名和linux层键值的对应关系"><a href="#定义linux层通用键名和linux层键值的对应关系" class="headerlink" title="定义linux层通用键名和linux层键值的对应关系"></a>定义linux层通用键名和linux层键值的对应关系</h4><p><code>/device/hisilicon/bigfish/system/ir_user/key_pars/linux_key.h</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">const linux_keycode_ary Linux_KeyCode_Ary[512]=</span><br><span class="line">&#123;</span><br><span class="line">	&#123;&quot;KEY_RESERVED&quot;,0&#125;,</span><br><span class="line">	&#123;&quot;KEY_ESC&quot;,		1&#125;,</span><br><span class="line">	...</span><br><span class="line">	&#123;&quot;KEY_MUTE&quot;,	113&#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="提供接口get-keycode解析xml建立原始码值和linux层键值的映射数组"><a href="#提供接口get-keycode解析xml建立原始码值和linux层键值的映射数组" class="headerlink" title="提供接口get_keycode解析xml建立原始码值和linux层键值的映射数组"></a>提供接口get_keycode解析xml建立原始码值和linux层键值的映射数组</h4><p><code>/device/hisilicon/bigfish/system/ir_user/key_pars/ key_pars.c</code></p>
+<p>####android_ir_user</p>
+<p><code>/device/hisilicon/bigfish/system/ir_user/ir_user.cpp</code></p>
+<ul>
+<li>编译为后台进程android_ir_user独立运行；</li>
+<li>进程启动，执行main入口函数，调用get_keycode完成key.xml存储原始码值和linux层键值的映射关系到数组keyarry；</li>
+<li>建立ir_sample_thread线程读取原始码值，根据keyarry转换为linux层键值，通过ReportKeyEvent写入dev/vinput设备,其他进程可以读取键值</li>
+</ul>
+<h3 id="linux层键值转换为Android键值"><a href="#linux层键值转换为Android键值" class="headerlink" title="linux层键值转换为Android键值"></a>linux层键值转换为Android键值</h3><p>  核心输入: /dev/input, 输入linux键值</p>
+<p>  核心输出: getEvents(),输出RawEvent* buffer，存储linux层键值；mapKey(),将linux层键值转换为android键值</p>
+<ol>
+<li>定义linux键值和对应的键名字符串</li>
+</ol>
+<p><code>/device/hisilicon/bigfish/prebuilts/Vendor_0001_Product_0001.kl:</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">key 111   FORWARD_DEL</span><br><span class="line"># key 112 &quot;KEY_MACRO&quot;</span><br><span class="line">key 113   VOLUME_MUTE</span><br><span class="line">key 114   VOLUME_DOWN</span><br><span class="line">key 115   VOLUME_UP</span><br><span class="line">key 116   POWER</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>定义键名字符串和android java层键值对应关系结构数组KEYCODES</li>
+</ol>
+<p><code>/frameworks/native/include/input/KeycodeLabels.h</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; &quot;MUTE&quot;, 91 &#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li><p><code>\frameworks\native\libs\input\Keyboard.cpp</code></p>
+<ul>
+<li>提供函数loadKeyLayout和getPath，定位linux到android键第一转换映射文件为Vendor_0001_Product_0001.kl</li>
+<li>提供函数<code>getKeyCodeByLabel</code>，从KeycodeLabels.h的KEYCODES数组中，查询返回android的java键值。</li>
+</ul>
+</li>
+<li><p><code>\frameworks\native\libs\input\KeyLayoutMap.cpp</code></p>
+<ul>
+<li>提供函数load和parse等解析Vendor_0001_Product_0001.kl，并调用Keyboard.cpp的getKeyCodeByLabel，通过“linux键值—键名字符串—android的java层键值”的直接建立“linux键值— android的java层键值”map集合；</li>
+<li>提供函数mapKey基于此集合供上层转换linux键值为android的java键值</li>
+</ul>
+</li>
+<li><p><code>\frameworks\base\services\input\EventHub.cpp</code></p>
+<ul>
+<li>提供getEvents,完成两个事:<ol>
+<li>建立linux键值— android的java层键值”map集合。</li>
+<li>扫描linux键值，存储到参数RawEvent* buffer。</li>
+</ol>
+</li>
+<li>提供mapKey，调用KeyLayoutMap.cpp的mapKey函数，完成转换linux键值为android的java键值</li>
+</ul>
+</li>
+<li><p>关于建立linux键值—android的java层键值”map集合，代码流程:</p>
+<ul>
+<li><p><code>\frameworks\base\services\input\EventHub.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void EventHub::scanDevicesLocked() &#123;</span><br><span class="line">    status_t res = scanDirLocked(DEVICE_PATH);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">status_t EventHub::scanDirLocked(const char *dirname)</span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">    openDeviceLocked(devname);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">status_t EventHub::openDeviceLocked(const char *devicePath) &#123;</span><br><span class="line">    // Load the key map.</span><br><span class="line">    // We need to do this for joysticks too because the key layout may specify axes.</span><br><span class="line">    status_t keyMapStatus = NAME_NOT_FOUND;</span><br><span class="line">    if (device-&gt;classes &amp; (INPUT_DEVICE_CLASS_KEYBOARD | INPUT_DEVICE_CLASS_JOYSTICK)) &#123;</span><br><span class="line">        // Load the keymap for the device.</span><br><span class="line">        keyMapStatus = loadKeyMapLocked(device);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">status_t EventHub::loadKeyMapLocked(Device* device) &#123;</span><br><span class="line">    return device-&gt;keyMap.load(device-&gt;identifier, device-&gt;configuration);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>/frameworks/native/libs/input/Keyboard.cpp</code></p>
+<p>loadKeyMapLocked调用Keyboard.cpp下load()函数:</p>
+</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">status_t KeyMap::load(const InputDeviceIdentifier&amp; deviceIdenfifier,</span><br><span class="line">        const PropertyMap* deviceConfiguration) &#123;</span><br><span class="line">    // Use the configured key layout if available.</span><br><span class="line">   ...</span><br><span class="line">    // Try searching by device identifier.</span><br><span class="line">    if (probeKeyMap(deviceIdenfifier, String8::empty())) &#123;</span><br><span class="line">        return OK;</span><br><span class="line">    &#125;</span><br><span class="line">    // Fall back on the Generic key map.</span><br><span class="line">    // TODO Apply some additional heuristics here to figure out what kind of</span><br><span class="line">    //      generic key map to use (US English, etc.) for typical external keyboards.</span><br><span class="line">    if (probeKeyMap(deviceIdenfifier, String8(&quot;Generic&quot;))) &#123;</span><br><span class="line">        return OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Try the Virtual key map as a last resort.</span><br><span class="line">    if (probeKeyMap(deviceIdenfifier, String8(&quot;Virtual&quot;))) &#123;</span><br><span class="line">        return OK;</span><br><span class="line">    &#125;</span><br><span class="line">    return NAME_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">bool KeyMap::probeKeyMap(const InputDeviceIdentifier&amp; deviceIdentifier,</span><br><span class="line">        const String8&amp; keyMapName) &#123;</span><br><span class="line">    if (!haveKeyLayout()) &#123;</span><br><span class="line">        loadKeyLayout(deviceIdentifier, keyMapName);</span><br><span class="line">    &#125;</span><br><span class="line">    if (!haveKeyCharacterMap()) &#123;</span><br><span class="line">        loadKeyCharacterMap(deviceIdentifier, keyMapName);</span><br><span class="line">    &#125;</span><br><span class="line">    return isComplete();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">status_t KeyMap::loadKeyLayout(const InputDeviceIdentifier&amp; deviceIdentifier,</span><br><span class="line">        const String8&amp; name) &#123;</span><br><span class="line">    String8 path(getPath(deviceIdentifier, name,</span><br><span class="line">            INPUT_DEVICE_CONFIGURATION_FILE_TYPE_KEY_LAYOUT));</span><br><span class="line">    status_t status = KeyLayoutMap::load(path, &amp;keyLayoutMap);</span><br><span class="line">    if (status) &#123;</span><br><span class="line">        return status;</span><br><span class="line">    &#125;</span><br><span class="line">    keyLayoutFile.setTo(path);</span><br><span class="line">    return OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">String8 KeyMap::getPath(const InputDeviceIdentifier&amp; deviceIdentifier,</span><br><span class="line">        const String8&amp; name, InputDeviceConfigurationFileType type) &#123;</span><br><span class="line">    return name.isEmpty()</span><br><span class="line">            ? getInputDeviceConfigurationFilePathByDeviceIdentifier(deviceIdentifier, type)</span><br><span class="line">            : getInputDeviceConfigurationFilePathByName(name, type);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里才确定path为：./system/usr/keylayout/Vendor_0001_Product_0001.kl</p>
+<p>再继续调用KeyLayoutMap::load加载并解析</p>
+<p><code>./frameworks/native/libs/input/KeyLayoutMap.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">status_t KeyLayoutMap::load(const String8&amp; filename, sp&lt;KeyLayoutMap&gt;* outMap) &#123;</span><br><span class="line">    outMap-&gt;clear();</span><br><span class="line">	...</span><br><span class="line">    Parser parser(map.get(), tokenizer);</span><br><span class="line">    status = parser.parse();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">status_t KeyLayoutMap::Parser::parse() &#123;</span><br><span class="line">    while (!mTokenizer-&gt;isEof()) &#123;</span><br><span class="line">#if DEBUG_PARSER</span><br><span class="line">        ALOGD(&quot;Parsing %s: &apos;%s&apos;.&quot;, mTokenizer-&gt;getLocation().string(),</span><br><span class="line">                mTokenizer-&gt;peekRemainderOfLine().string());</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">        mTokenizer-&gt;skipDelimiters(WHITESPACE);</span><br><span class="line"></span><br><span class="line">        if (!mTokenizer-&gt;isEol() &amp;&amp; mTokenizer-&gt;peekChar() != &apos;#&apos;) &#123;</span><br><span class="line">            String8 keywordToken = mTokenizer-&gt;nextToken(WHITESPACE);</span><br><span class="line">            if (keywordToken == &quot;key&quot;) &#123;</span><br><span class="line">                mTokenizer-&gt;skipDelimiters(WHITESPACE);</span><br><span class="line">                status_t status = parseKey();</span><br><span class="line">                if (status) return status;</span><br><span class="line">            &#125; else if (keywordToken == &quot;axis&quot;) &#123;</span><br><span class="line">                mTokenizer-&gt;skipDelimiters(WHITESPACE);</span><br><span class="line">                status_t status = parseAxis();</span><br><span class="line">                if (status) return status;</span><br><span class="line">            &#125; else if (keywordToken == &quot;led&quot;) &#123;</span><br><span class="line">                mTokenizer-&gt;skipDelimiters(WHITESPACE);</span><br><span class="line">                status_t status = parseLed();</span><br><span class="line">                if (status) return status;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                ALOGE(&quot;%s: Expected keyword, got &apos;%s&apos;.&quot;, mTokenizer-&gt;getLocation().string(),</span><br><span class="line">                        keywordToken.string());</span><br><span class="line">                return BAD_VALUE;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            mTokenizer-&gt;skipDelimiters(WHITESPACE);</span><br><span class="line">            if (!mTokenizer-&gt;isEol() &amp;&amp; mTokenizer-&gt;peekChar() != &apos;#&apos;) &#123;</span><br><span class="line">                ALOGE(&quot;%s: Expected end of line or trailing comment, got &apos;%s&apos;.&quot;,</span><br><span class="line">                        mTokenizer-&gt;getLocation().string(),</span><br><span class="line">                        mTokenizer-&gt;peekRemainderOfLine().string());</span><br><span class="line">                return BAD_VALUE;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        mTokenizer-&gt;nextLine();</span><br><span class="line">    &#125;</span><br><span class="line">    return NO_ERROR;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 解析Vendor_0001_Product_0001.kl得到linux层code,再调用getKeyCodeByLabel查询code对应的android层键值keyCode</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">status_t KeyLayoutMap::Parser::parseKey() &#123;</span><br><span class="line">	...</span><br><span class="line">	 KeyedVector&lt;int32_t, Key&gt;&amp; map = mapUsage ? mMap-&gt;mKeysByUsageCode : mMap-&gt;mKeysByScanCode;</span><br><span class="line">    int32_t code = int32_t(strtol(codeToken.string(), &amp;end, 0));</span><br><span class="line">    ...</span><br><span class="line">    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.string());</span><br><span class="line">    if (!keyCode) &#123;</span><br><span class="line">        return BAD_VALUE;</span><br><span class="line">    &#125;</span><br><span class="line">    Key key;</span><br><span class="line">    key.keyCode = keyCode;</span><br><span class="line">    key.flags = flags;</span><br><span class="line">    map.add(code, key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>将两个键值存入map集合,到此完成linux层键值到android的java层键值的转换并存储为map集合；后面真正扫描到 linux键值后，调用mapKey根据存储的map集成转换为android键值进行上报。</p>
+<ul>
+<li>总结:</li>
+</ul>
+<p>这个部分可以看出，其完全是个中间过程，如果我们要修改某个键在android的表现，完全不用改这其中相关的任何文件，只需要在java层（后面会讲到，keyevent.java）对收到的android键进行再转换即可。</p>
+<p>###Android键值上报应用层</p>
+<p>核心输入 : eventhub.cpp的getEvents()和mapkey()</p>
+<p>核心输出：PhoneWindowManager.java的interceptKeyBeforeQueueing和 interceptKeyBeforeDispatching</p>
+<p>InputReader是在InputReaderThread中启动的，调用时序图如下所示。</p>
+<p><img src="/2019/01/18/Android系统按键-海思为例-上报流程/1.png" alt=""></p>
+<p>InputReaderThread的threadLoop函数如下所示。<br><code>frameworks/native/services/inputflinger/InputReader.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bool InputReaderThread::threadLoop() &#123;</span><br><span class="line">    mReader-&gt;loopOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>threadLoop函数中只调用了InputReader的loopOnce函数：<br><code>frameworks/native/services/inputflinger/InputReader.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">  ...</span><br><span class="line">    //通过EventHub的getEvents函数获取事件信息存在mEventBuffer中</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);//1</span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mReaderIsAliveCondition.broadcast();</span><br><span class="line">        if (count) &#123;</span><br><span class="line">            //如果有事件信息，调用processEventsLocked函数对事件进行加工处理</span><br><span class="line">            processEventsLocked(mEventBuffer, count);//2</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>InputReader主要负责：linux按键的读取；转换为android键值；通过listener启动按键上报，注意这里仅仅是启动按键上报。</p>
+<p>InputReader 类构造函数InputReader两个极其重要的参数: eventHub和listener，前者用来读取linux键值，后者用来分发上报按键。</p>
+<p>说明：参数eventHub，赋值给变量mEventHub；listener作为参数创建了mQueuedListener。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">InputReader::InputReader(const sp&lt;EventHubInterface&gt;&amp; eventHub,</span><br><span class="line">        const sp&lt;InputReaderPolicyInterface&gt;&amp; policy,</span><br><span class="line">        const sp&lt;InputListenerInterface&gt;&amp; listener) :</span><br><span class="line">        mContext(this), mEventHub(eventHub), mPolicy(policy),</span><br><span class="line">        mGlobalMetaState(0), mGeneration(1),</span><br><span class="line">        mDisableVirtualKeysTimeout(LLONG_MIN), mNextTimeout(LLONG_MAX),</span><br><span class="line">        mConfigurationChangesToRefresh(0) &#123;</span><br><span class="line">    mQueuedListener = new QueuedInputListener(listener);</span><br><span class="line"></span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line"></span><br><span class="line">        refreshConfigurationLocked(0);</span><br><span class="line">        updateGlobalMetaStateLocked();</span><br><span class="line">    &#125; // release lock</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处调用EventHub的getEvents函数来获取设备节点的事件信息到mEventBuffer中，事件信息主要有两种，一种是设备节点的增删事件（设备事件），一种是原始输入事件。注释2处的processEventsLocked函数用于对mEventBuffer中的原始输入事件信息进行加工处理，加工后的输入事件会交由InputDispatcher来处理processEventsLocked函数如下所示。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">void InputReader::processEventsLocked(const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    //遍历所有的事件</span><br><span class="line">    for (const RawEvent* rawEvent = rawEvents; count;) &#123;</span><br><span class="line">        int32_t type = rawEvent-&gt;type;</span><br><span class="line">        size_t batchSize = 1;</span><br><span class="line">        //事件类型分为原始输入事件和设备事件，这个条件语句对原始输入事件进行处理</span><br><span class="line">        if (type &lt; EventHubInterface::FIRST_SYNTHETIC_EVENT) &#123;</span><br><span class="line">            int32_t deviceId = rawEvent-&gt;deviceId;</span><br><span class="line">            while (batchSize &lt; count) &#123;</span><br><span class="line">                if (rawEvent[batchSize].type &gt;= EventHubInterface::FIRST_SYNTHETIC_EVENT</span><br><span class="line">                        || rawEvent[batchSize].deviceId != deviceId) &#123;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">                batchSize += 1;</span><br><span class="line">            &#125;</span><br><span class="line">#if DEBUG_RAW_EVENTS</span><br><span class="line">            ALOGD(&quot;BatchSize: %d Count: %d&quot;, batchSize, count);</span><br><span class="line">#endif</span><br><span class="line">         //处理deviceId所对应的设备的原始输入事件</span><br><span class="line">            processEventsForDeviceLocked(deviceId, rawEvent, batchSize);//1</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">        //对设备事件进行处理</span><br><span class="line">            switch (rawEvent-&gt;type) &#123;</span><br><span class="line">            case EventHubInterface::DEVICE_ADDED:</span><br><span class="line">                addDeviceLocked(rawEvent-&gt;when, rawEvent-&gt;deviceId);</span><br><span class="line">                break;</span><br><span class="line">            case EventHubInterface::DEVICE_REMOVED:</span><br><span class="line">                removeDeviceLocked(rawEvent-&gt;when, rawEvent-&gt;deviceId);</span><br><span class="line">                break;</span><br><span class="line">            case EventHubInterface::FINISHED_DEVICE_SCAN:</span><br><span class="line">                handleConfigurationChangedLocked(rawEvent-&gt;when);</span><br><span class="line">                break;</span><br><span class="line">            default:</span><br><span class="line">                ALOG_ASSERT(false); // can&apos;t happen</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        count -= batchSize;</span><br><span class="line">        rawEvent += batchSize;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bool InputReaderThread::threadLoop() &#123;</span><br><span class="line">    mReader-&gt;loopOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>loopOnce函数及其调用的一连串函数,调用mEventHub-&gt;getEvents读取linux按键到RawEvent 类型的mEventBuffer成员变量；调用processEventsLocked分发上报。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">  ...</span><br><span class="line">    //通过EventHub的getEvents函数获取事件信息存在mEventBuffer中</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);//1</span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mReaderIsAliveCondition.broadcast();</span><br><span class="line">        if (count) &#123;</span><br><span class="line">            //如果有事件信息，调用processEventsLocked函数对事件进行加工处理</span><br><span class="line">            processEventsLocked(mEventBuffer, count);//2</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;void InputReader::loopOnce() &#123;</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);</span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mReaderIsAliveCondition.broadcast();</span><br><span class="line"></span><br><span class="line">        if (count) &#123;</span><br><span class="line">            processEventsLocked(mEventBuffer, count);</span><br><span class="line">        &#125;</span><br><span class="line">    mQueuedListener-&gt;flush();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>InputReader的processEventsLocked函数首先遍历了所有的事件，这些事件用RawEvent对象来表示，将原始<br>输入事件和设备事件分开处理，其中设备事件分为DEVICE_ADDED、DEVICE_REMOVED和FINISHED_DEVICE_SCAN，这些事件是在EventHub的getEvent函数中生成的。如果是DEVICE_ADDED事件（设备添加事件），InputReader会新建InputDevice对象，用来存储设备信息，并且会将InputDevice存储在<br>KeyedVector类型的容器mDevices中。<br>同一个设备的输入事件交给processEventsForDeviceLocked函数来处理。</p>
+<p><code>frameworks/native/services/inputflinger/InputReader.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">void InputReader::processEventsForDeviceLocked(int32_t deviceId,</span><br><span class="line">        const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    ssize_t deviceIndex = mDevices.indexOfKey(deviceId);//1</span><br><span class="line">    if (deviceIndex &lt; 0) &#123;</span><br><span class="line">        ALOGW(&quot;Discarding event for unknown deviceId %d.&quot;, deviceId);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    InputDevice* device = mDevices.valueAt(deviceIndex);//2</span><br><span class="line">    if (device-&gt;isIgnored()) &#123;</span><br><span class="line">        //ALOGD(&quot;Discarding event for ignored deviceId %d.&quot;, deviceId);</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    device-&gt;process(rawEvents, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处根据deviceId从mDevices中获取对应的deviceIndex，注释2处再根据这个deviceIndex从mDevices中获取对应的InputDevice。最后会调用InputDevice的process函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">void InputDevice::process(const RawEvent* rawEvents, size_t count) &#123;*</span><br><span class="line">    size_t numMappers = mMappers.size();</span><br><span class="line">    //遍历处理该InputDevice所有的事件</span><br><span class="line">    for (const RawEvent* rawEvent = rawEvents; count--; rawEvent++) &#123;</span><br><span class="line">#if DEBUG_RAW_EVENTS</span><br><span class="line">        ALOGD(&quot;Input event: device=%d type=0x%04x code=0x%04x value=0x%08x when=%lld&quot;,</span><br><span class="line">                rawEvent-&gt;deviceId, rawEvent-&gt;type, rawEvent-&gt;code, rawEvent-&gt;value,</span><br><span class="line">                rawEvent-&gt;when);</span><br><span class="line">#endif</span><br><span class="line">        //mDropUntilNextSync的值默认为false，如果设备的输入事件缓冲区溢出，这个值会置为true。</span><br><span class="line">        if (mDropUntilNextSync) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            for (size_t i = 0; i &lt; numMappers; i++) &#123;//1</span><br><span class="line">                InputMapper* mapper = mMappers[i];</span><br><span class="line">                mapper-&gt;process(rawEvent);//2</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先会遍历InputDevice中的所有的事件，真正加工原始输入事件的是InputMapper对象，由于原始输入事件的类型很多，因此在InputMapper有很多子类，用于加工不同的原始输入事件，比如KeyboardInputMapper用于处理键盘输入事件，TouchInputMapper用于处理触摸输入事件。<br>注释1处遍历所有的InputMapper，在注释2处将原始输入事件交由这些InputMapper来处理，至于是哪个InputMapper来处理，InputReader并不关心。<br>这里就以处理键盘输入事件为例，KeyboardInputMapper的process函数如下所示。<br><code>frameworks/native/services/inputflinger/InputReader.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">void KeyboardInputMapper::process(const RawEvent* rawEvent) &#123;</span><br><span class="line">    switch (rawEvent-&gt;type) &#123;</span><br><span class="line">    case EV_KEY: &#123;//1</span><br><span class="line">        int32_t scanCode = rawEvent-&gt;code;</span><br><span class="line">        int32_t usageCode = mCurrentHidUsage;</span><br><span class="line">        mCurrentHidUsage = 0;</span><br><span class="line">        if (isKeyboardOrGamepadKey(scanCode)) &#123;</span><br><span class="line">            processKey(rawEvent-&gt;when, rawEvent-&gt;value != 0, scanCode, usageCode);//2</span><br><span class="line">        &#125;</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line">   ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处，如果事件的类型为按键类型的事件，就会调用注释2处的KeyboardInputMapper的processKey函数。<br><code>frameworks/native/services/inputflinger/InputReader.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t scanCode,</span><br><span class="line">        int32_t usageCode) &#123;</span><br><span class="line">   ...</span><br><span class="line">    NotifyKeyArgs args(when, getDeviceId(), mSource, policyFlags,</span><br><span class="line">            down ? AKEY_EVENT_ACTION_DOWN : AKEY_EVENT_ACTION_UP,</span><br><span class="line">            AKEY_EVENT_FLAG_FROM_SYSTEM, keyCode, scanCode, keyMetaState, downTime);</span><br><span class="line">    getListener()-&gt;notifyKey(&amp;args);//1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 注意这里的getListener就是取得inputreader类初始化时用参数“const sp<inputlistenerinterface>&amp; listener”初始化的mQueuedListener。</inputlistenerinterface></p>
+<p>到这里，Inputread.cpp模块的按键分发上报全部完成，后续只要搞清楚sp<inputlistenerinterface>&amp; listener”到底是谁，就知道按键分发到哪里去了。</inputlistenerinterface></p>
+<p>InputDispatcher继承了InputDispatcherInterface，而InputDispatcherInterface继承了InputListenerInterface，因此注释1处实际上是调用了InputDispatcher的notifyKey函数，将NotifyKeyArgs交给InputDispatcher处理。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::notifyKey(const NotifyKeyArgs* args) &#123;</span><br><span class="line">  ...</span><br><span class="line">    bool needWake;</span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        mLock.lock();</span><br><span class="line">        if (shouldSendKeyToInputFilterLocked(args)) &#123;</span><br><span class="line">            mLock.unlock();</span><br><span class="line">            policyFlags |= POLICY_FLAG_FILTERED;</span><br><span class="line">            if (!mPolicy-&gt;filterInputEvent(&amp;event, policyFlags)) &#123;</span><br><span class="line">                return; // event was consumed by the filter</span><br><span class="line">            &#125;</span><br><span class="line">            mLock.lock();</span><br><span class="line">        &#125;</span><br><span class="line">        int32_t repeatCount = 0;</span><br><span class="line">        KeyEntry* newEntry = new KeyEntry(args-&gt;eventTime,</span><br><span class="line">                args-&gt;deviceId, args-&gt;source, policyFlags,</span><br><span class="line">                args-&gt;action, flags, keyCode, args-&gt;scanCode,</span><br><span class="line">                metaState, repeatCount, args-&gt;downTime);//1</span><br><span class="line">        needWake = enqueueInboundEventLocked(newEntry);//2</span><br><span class="line">        mLock.unlock();</span><br><span class="line">    &#125; // release lock</span><br><span class="line">    if (needWake) &#123;</span><br><span class="line">        mLooper-&gt;wake();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码块中采用Mutex互斥锁的形式，在注释1处根据NotifyKeyArgs，重新封装一个KeyEntry对象，代表一次按键数据。注释2处根据KeyEntry，来判断是否需要将睡眠中的InputDispatcherThread唤醒，如果需要，就调用Looper的wake函数进行唤醒，InputDispatcherThread被唤醒后就会重新对输入事件的分发。</p>
+<h3 id="InputDispatcher的启动过程"><a href="#InputDispatcher的启动过程" class="headerlink" title="InputDispatcher的启动过程"></a><strong>InputDispatcher的启动过程</strong></h3><p>InputDispatcher是真正的按键数据上报的起点，InputReader中的listener实际就是这个InputDispatcher，该类继承自接口InputDispatcherInterface。</p>
+<p>完成3个事情:</p>
+<p>   interceptKeyBeforeQueueing：按键入列前的截获处理</p>
+<p>   interceptKeyBeforeDispatching：按键从队列分发上层app前的截获处理</p>
+<p>   startDispatchCycleLocked：完成按键最终分发上报</p>
+<p>先来回顾下InputDispatcher和InputReader是在哪创建的，InputManager的构造函数如下所示。<br><code>frameworks/native/services/inputflinger/InputManager.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">InputManager::InputManager(</span><br><span class="line">        const sp&lt;EventHubInterface&gt;&amp; eventHub,</span><br><span class="line">        const sp&lt;InputReaderPolicyInterface&gt;&amp; readerPolicy,</span><br><span class="line">        const sp&lt;InputDispatcherPolicyInterface&gt;&amp; dispatcherPolicy) &#123;</span><br><span class="line">    mDispatcher = new InputDispatcher(dispatcherPolicy);</span><br><span class="line">    mReader = new InputReader(eventHub, readerPolicy, mDispatcher);</span><br><span class="line">    initialize();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到InputDispatcher和InputReader是有关联的，InputDispatcher会作为一个参数传入到InputReader中。<br>InputDispatcher是在InputReader之前创建的，这个顺序不能改变，因为要确保InputReader将加工后的输入事件交给InputDispatcher时，InputDispatcher已经被创建。<br>InputDispatcher的定义如下所示。</p>
+<p><code>frameworks/native/services/inputflinger/InputDispatcher.h</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">class InputDispatcherThread : public Thread &#123;</span><br><span class="line">public:</span><br><span class="line">    explicit InputDispatcherThread(const sp&lt;InputDispatcherInterface&gt;&amp; dispatcher);</span><br><span class="line">    ~InputDispatcherThread();</span><br><span class="line">private:</span><br><span class="line">    virtual bool threadLoop();</span><br><span class="line">    sp&lt;InputDispatcherInterface&gt; mDispatcher;</span><br><span class="line">&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>InputDispatcher.h中定义了threadLoop纯虚函数，InputDispatcher继承了Thread。native的Thread内部有一个循环，当线程运行时，会调用threadLoop函数，如果它返回true并且没有调用requestExit函数，就会接着循环调用threadLoop函数。<br>查看InputDispatcherThread的threadLoop函数是如何实现的。<br><code>frameworks/native/services/inputflinger/InputDispatcher.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bool InputDispatcherThread::threadLoop() &#123;</span><br><span class="line">    mDispatcher-&gt;dispatchOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>threadLoop函数中只调用了InputDispatcher的dispatchOnce函数：<br><code>frameworks/native/services/inputflinger/InputDispatcher.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    nsecs_t nextWakeupTime = LONG_LONG_MAX;</span><br><span class="line">    &#123; // acquire lock</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mDispatcherIsAliveCondition.broadcast();</span><br><span class="line">        if (!haveCommandsLocked()) &#123;//1</span><br><span class="line">            dispatchOnceInnerLocked(&amp;nextWakeupTime);//2</span><br><span class="line">        &#125;</span><br><span class="line">        if (runCommandsLockedInterruptible()) &#123;</span><br><span class="line">            nextWakeupTime = LONG_LONG_MIN;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; // release lock</span><br><span class="line">    nsecs_t currentTime = now();//3</span><br><span class="line">    int timeoutMillis = toMillisecondTimeoutDelay(currentTime, nextWakeupTime);//4</span><br><span class="line">    mLooper-&gt;pollOnce(timeoutMillis);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注释1处用于检查InputDispatcher的缓存队列中是否有等待处理 的命令，如果没有就会执行注释2处的dispatchOnceInnerLocked函数，用来将输入事件分发给合适的Window。注释3处获取当前的时间，结合注释4处，得出InputDispatcherThread需要睡眠的时间为timeoutMillis。最后调用Looper的pollOnce函数使InputDispatcherThread进入睡眠状态，并将它的最长的睡眠的时间设置为timeoutMillis。当有输入事件产生时，InputReader就会将睡眠状态的InputDispatcher<br>唤醒，InputDispatcher会重新开始分发输入事件。</p>
+<p>InputDispatcher中还有个notifyKey方法，notifyKey被之前的inputreader调用，notifyKey调用interceptKeyBeforeQueueing，</p>
+<p>进行第一次按键上报，供上层截获按键，在按键被压入队列前进行必要的处理，如设置，桌面等在keyfuntion.xml中配置的快捷键，或待机键等的处理。</p>
+<p><code>/frameworks/native/services/inputflinger/InputDispatcher.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::notifyKey(const NotifyKeyArgs* args) &#123;</span><br><span class="line">	KeyEvent event;</span><br><span class="line">    event.initialize(args-&gt;deviceId, args-&gt;source, args-&gt;action,</span><br><span class="line">            flags, keyCode, args-&gt;scanCode, metaState, 0,</span><br><span class="line">            args-&gt;downTime, args-&gt;eventTime);</span><br><span class="line">    mPolicy-&gt;interceptKeyBeforeQueueing(&amp;event, /*byref*/ policyFlags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到这里完成按键进入Queue队列前的上报处理，如果interceptKeyBeforeQueueing没有处理这个按键，将会继续调用enqueueInboundEventLocked。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>回头看整个按键转换和分发流程,有两个根节点:</p>
+<ol>
+<li><p>第一层次读取linux键值的进程,**android_ir_user这个bin文件,由系统脚本开机拉起</p>
+</li>
+<li><p>第二、三层次的按键分发，总源头为SystemServer这个服务的启动，由android系统开机启动，详细流程参见 <a href="https://zengnb.xyz/2018/03/05/Android%E7%B3%BB%E7%BB%9F%E5%90%AF%E5%8A%A8-SystemServer/" target="_blank" rel="noopener">android SystemServer启动流程</a>。</p>
+</li>
+</ol>
+<p>以上除了第一层次linux键值的获取外，其他所有层次实际都是一个通用的转换和上报过程，最终到达<code>PhoneWindowManager</code>的interceptKeyBeforeQueueing和interceptKeyBeforeDispatching后，按键是以KeyEvent类实例作为参数传入的，并且必须以getKeyCode来访问实际android键值。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/18/键值从键盘到Linux内核传输过程分析/" rel="next" title="键值从键盘到Linux内核传输过程分析">
+                <i class="fa fa-chevron-left"></i> 键值从键盘到Linux内核传输过程分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#原始ir键值读取-转变为linux层键值"><span class="nav-number">1.</span> <span class="nav-text">原始ir键值读取,转变为linux层键值</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#定义原始硬件码值和对应linux层通用键名"><span class="nav-number">1.1.</span> <span class="nav-text">定义原始硬件码值和对应linux层通用键名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#定义linux层通用键名和linux层键值的对应关系"><span class="nav-number">1.2.</span> <span class="nav-text">定义linux层通用键名和linux层键值的对应关系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提供接口get-keycode解析xml建立原始码值和linux层键值的映射数组"><span class="nav-number">1.3.</span> <span class="nav-text">提供接口get_keycode解析xml建立原始码值和linux层键值的映射数组</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux层键值转换为Android键值"><span class="nav-number">2.</span> <span class="nav-text">linux层键值转换为Android键值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#InputDispatcher的启动过程"><span class="nav-number">3.</span> <span class="nav-text">InputDispatcher的启动过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

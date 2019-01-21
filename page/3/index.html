@@ -259,7 +259,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/03/Android系统启动-Zygote/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/01/Android-WindowManager-2/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -278,7 +278,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/03/Android系统启动-Zygote/" itemprop="url">Android系统启动_Zygote</a></h1>
+                <a class="post-title-link" href="/2018/07/01/Android-WindowManager-2/" itemprop="url">Android WindowManager(2)</a></h1>
         
 
         <div class="post-meta">
@@ -290,8 +290,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-03T19:32:10+08:00">
-                2018-03-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-01T14:39:07+08:00">
+                2018-07-01
               </time>
             
 
@@ -313,8 +313,8 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/系统启动流程/" itemprop="url" rel="index">
-                    <span itemprop="name">系统启动流程</span>
+                  <a href="/categories/WindowManager/" itemprop="url" rel="index">
+                    <span itemprop="name">WindowManager</span>
                   </a>
                 </span>
 
@@ -352,11 +352,11 @@
       
         
           
-          在Android中，zygote是整个系统创建新进程的核心进程。zygote进程在内部会先启动Dalvik虚拟机，继而加载一些必要的系统资源和系统类，最后进入一种监听状态。在之后的运作中，当其他系统模块（比如 AMS）希望创建新进程时，只需向zygote进程发出请求，zygote进程监听到该请求后，
+          概述上一篇文章中我们讲过了Window、WindowManager和WMS之间的关系，WMS是Window的最终管理者，Window好比是员工，WMS是老板，为了方便老板管理员工则需要定义一些“协议”，这些“协议”就是Window的属性，被定义在WindowManager的内部类LayoutPara
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/03/Android系统启动-Zygote/#more" rel="contents">
+            <a class="btn" href="/2018/07/01/Android-WindowManager-2/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -407,7 +407,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/01/Android系统启动-Init/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/01/Android-WindowManager-1/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -426,7 +426,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/03/01/Android系统启动-Init/" itemprop="url">Android系统启动_Init</a></h1>
+                <a class="post-title-link" href="/2018/07/01/Android-WindowManager-1/" itemprop="url">Android WindowManager(1)</a></h1>
         
 
         <div class="post-meta">
@@ -438,8 +438,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-01T19:21:48+08:00">
-                2018-03-01
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-01T11:33:48+08:00">
+                2018-07-01
               </time>
             
 
@@ -461,8 +461,8 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/系统启动流程/" itemprop="url" rel="index">
-                    <span itemprop="name">系统启动流程</span>
+                  <a href="/categories/WindowManager/" itemprop="url" rel="index">
+                    <span itemprop="name">WindowManager</span>
                   </a>
                 </span>
 
@@ -500,12 +500,12 @@
       
         
           
-          整个Android系统的启动分为Linux Kernel的启动和Android系统的启动。Linux Kernel启动起来后，然后运行第一个用户程序，在Android中就是init程序。
-​    init是linux系统中用户空间的第一个进程。由于Android是基于linux内核的，所以init
+          前言WindowManagerService（WMS）和AMS一样，都是Android开发需要掌握的知识点，同样的，WMS也很复杂，需要多篇文章来进行讲解，为何更好的理解WMS，首先要了解WindowManager，这一篇我们来学习WindowManager体系。
+Window、WindowMana
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/01/Android系统启动-Init/#more" rel="contents">
+            <a class="btn" href="/2018/07/01/Android-WindowManager-1/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -556,7 +556,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/08/Android-Butterknife使用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/28/Android-PackageManagerService/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -575,7 +575,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/02/08/Android-Butterknife使用/" itemprop="url">Android Butterknife使用</a></h1>
+                <a class="post-title-link" href="/2018/06/28/Android-PackageManagerService/" itemprop="url">Android PackageManagerService</a></h1>
         
 
         <div class="post-meta">
@@ -587,8 +587,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-08T16:39:11+08:00">
-                2018-02-08
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-28T14:20:13+08:00">
+                2018-06-28
               </time>
             
 
@@ -610,8 +610,8 @@
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/工具/" itemprop="url" rel="index">
-                    <span itemprop="name">工具</span>
+                  <a href="/categories/Android包管理机制/" itemprop="url" rel="index">
+                    <span itemprop="name">Android包管理机制</span>
                   </a>
                 </span>
 
@@ -649,12 +649,13 @@
       
         
           
-          Butterknife 的配置情况分很多种。本篇文章主要是在Android Studio 3.0版本下配置。
-由于Android studio更新，然后gradle更新了，这样的话可能使原来的android-apt 工具跟不上节奏了，所以让采用annotationProcessor工具。因此配置方法
+          ​    PackageManagerService是Android中比较重要的服务，它负责系统中Package的管理，应用程序的安装、卸载、信息查询等。
+PKMS服务启动过程本篇涉及的代码及路径：
+123456frameworks/base/services/java/com/android/se
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/02/08/Android-Butterknife使用/#more" rel="contents">
+            <a class="btn" href="/2018/06/28/Android-PackageManagerService/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -705,7 +706,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/04/Android深入理解JNI/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/23/PackageInstaller的初始化/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -724,7 +725,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/12/04/Android深入理解JNI/" itemprop="url">Android深入理解JNI</a></h1>
+                <a class="post-title-link" href="/2018/06/23/PackageInstaller的初始化/" itemprop="url">PackageInstaller的初始化</a></h1>
         
 
         <div class="post-meta">
@@ -736,135 +737,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-04T17:08:23+08:00">
-                2017-12-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          前言JNI不仅仅在NDK开发中应用，它更是Android系统中Java与Native交互的桥梁，不理解JNI的话，你就只能停留在Java Framework层。这一个系列我们来一起深入学习JNI。
-JNI概述Android系统按语言来划分的话由两个世界组成，分别是Java世界和Native世界。那为
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2017/12/04/Android深入理解JNI/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/11/09/Android-LinearLayout布局问题/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="zeng">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/logo.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zeng's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/11/09/Android-LinearLayout布局问题/" itemprop="url">Android LinearLayout布局问题</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-09T11:21:42+08:00">
-                2017-11-09
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-23T21:04:47+08:00">
+                2018-06-23
               </time>
             
 
@@ -886,8 +760,8 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/布局相关/" itemprop="url" rel="index">
-                    <span itemprop="name">布局相关</span>
+                  <a href="/categories/Android包管理机制/" itemprop="url" rel="index">
+                    <span itemprop="name">Android包管理机制</span>
                   </a>
                 </span>
 
@@ -925,12 +799,11 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
       
         
           
-          layout_gravity在“某些时候”，layout_gravity这个属性不好使了，失去了它应有的作用
-1234567891011121314151617&lt;LinearLayout    android:layout_width=&quot;match_parent&quot;    a
+          包管理机制是Android中的重要机制，是应用开发和系统开发需要掌握的知识点之一。包指的是apk、jar和so文件等等，它们被加载到Android内存中，由一个包转变成可执行的代码，这就需要一个机制来进行包的加载、解析、管理等操作，这就是包管理机制。包管理机制由许多类一起组成，其中核心为Packag
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/11/09/Android-LinearLayout布局问题/#more" rel="contents">
+            <a class="btn" href="/2018/06/23/PackageInstaller的初始化/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -981,7 +854,7 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/11/07/git常用命令/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/21/APK是如何被解析的/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -1000,7 +873,7 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/11/07/git常用命令/" itemprop="url">git常用命令</a></h1>
+                <a class="post-title-link" href="/2018/06/21/APK是如何被解析的/" itemprop="url">APK是如何被解析的</a></h1>
         
 
         <div class="post-meta">
@@ -1012,8 +885,135 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-07T18:30:57+08:00">
-                2017-11-07
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-21T20:49:14+08:00">
+                2018-06-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          前言在本系列的前面文章中，我介绍了PackageInstaller的初始化和安装APK过程、PMS处理APK的安装和PMS的创建过程，这些文章中经常会涉及到一个类，那就是PackageParser，它用来在APK的安装过程中解析APK，那么APK是如何被解析的呢？这篇文章会给你答案。
+引入Packa
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/06/21/APK是如何被解析的/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/18/PackageInstaller安装APK/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/06/18/PackageInstaller安装APK/" itemprop="url">PackageInstaller安装APK</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-18T20:08:30+08:00">
+                2018-06-18
               </time>
             
 
@@ -1035,8 +1035,8 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/工具/" itemprop="url" rel="index">
-                    <span itemprop="name">工具</span>
+                  <a href="/categories/Android包管理机制/" itemprop="url" rel="index">
+                    <span itemprop="name">Android包管理机制</span>
                   </a>
                 </span>
 
@@ -1074,16 +1074,11 @@ JNI概述Android系统按语言来划分的话由两个世界组成，分别是J
       
         
           
-          
-git clone [url]//克隆一份代码到本地仓库
-git pull //把远程库的代码更新到工作台
-git pull –rebase origin master //强制把远程库的代码跟新到当前分支上面
-git status //查看当前分支有哪些修改
-git diff //查看当前没有a
+          PackageInstaller中的处理紧接着上一篇的内容，在PackageInstallerActivity调用startInstallConfirm方法初始化安装确认界面后，这个安装确认界面就会呈现给用户，用户如果想要安装这个应用程序就会点击确定按钮，就会调用PackageInstallerAc
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/11/07/git常用命令/#more" rel="contents">
+            <a class="btn" href="/2018/06/18/PackageInstaller安装APK/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1134,7 +1129,7 @@ git diff //查看当前没有a
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/07/Android-apk签名方法/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/30/Android输入事件传递流程/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -1153,7 +1148,7 @@ git diff //查看当前没有a
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/08/07/Android-apk签名方法/" itemprop="url">Android apk签名方法</a></h1>
+                <a class="post-title-link" href="/2018/05/30/Android输入事件传递流程/" itemprop="url">Android输入事件传递流程</a></h1>
         
 
         <div class="post-meta">
@@ -1165,8 +1160,8 @@ git diff //查看当前没有a
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-07T16:49:11+08:00">
-                2017-08-07
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-30T19:41:08+08:00">
+                2018-05-30
               </time>
             
 
@@ -1188,8 +1183,8 @@ git diff //查看当前没有a
               
               
                 <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/工具/" itemprop="url" rel="index">
-                    <span itemprop="name">工具</span>
+                  <a href="/categories/InputManager/" itemprop="url" rel="index">
+                    <span itemprop="name">InputManager</span>
                   </a>
                 </span>
 
@@ -1227,15 +1222,12 @@ git diff //查看当前没有a
       
         
           
-          方法一：使用自己的Android签名工具给apk重新签名：
-使用自己的Android签名工具给apk重新签名：
-
-/build/target/product/security
- 该目录下有 media.pk8、media.x509.pem、platform.pk8、platform.x509.pem
+          前言很多人可能会认为输入系统是不是和View的事件分发有些关联，确实是有些关联，只不过View事件分发只能算是输入系统事件传递的一部分。这个系列讲的输入系统主要是我们不常接触的，但还是需要去了解的那部分。
+输入事件传递流程的组成部分输入系统是外界与Android设备交互的基础，仅凭输入系统是无法完成
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/08/07/Android-apk签名方法/#more" rel="contents">
+            <a class="btn" href="/2018/05/30/Android输入事件传递流程/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1286,7 +1278,7 @@ git diff //查看当前没有a
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/02/AndroidStudio和Gradle使用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/21/Android系统架构/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -1305,7 +1297,7 @@ git diff //查看当前没有a
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/08/02/AndroidStudio和Gradle使用/" itemprop="url">AndroidStudio和Gradle使用</a></h1>
+                <a class="post-title-link" href="/2018/05/21/Android系统架构/" itemprop="url">Android系统架构</a></h1>
         
 
         <div class="post-meta">
@@ -1317,8 +1309,8 @@ git diff //查看当前没有a
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-02T16:40:29+08:00">
-                2017-08-02
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-21T18:48:59+08:00">
+                2018-05-21
               </time>
             
 
@@ -1357,14 +1349,14 @@ git diff //查看当前没有a
       
         
           
-          环境搭建首先你得先有JDK并且配置好环境变量，默认都会了。你也得有Android SDK，默认也有了。
-Android Studio安装Android Studio
+          Android 系统架构Android系统架构分为五层，从上到下依次是应用层、应用框架层、系统运行库层、硬件抽象层和Linux内核层。
 
-下载安装Android Studio： https://developer.android.google.cn/studio/ind
+应用层系统内置的应用程序以及非系统级的应用程序都是属于应用层。负责与用户进行直接交互，通常都是用Java进行开发的。
+应用框架层（Java Framework)应
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/08/02/AndroidStudio和Gradle使用/#more" rel="contents">
+            <a class="btn" href="/2018/05/21/Android系统架构/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1415,7 +1407,7 @@ Android Studio安装Android Studio
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/27/notepad-怎么删除包含某些字段的行/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/19/Linux常用命令/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -1434,7 +1426,7 @@ Android Studio安装Android Studio
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/07/27/notepad-怎么删除包含某些字段的行/" itemprop="url">notepad++怎么删除包含某些字段的行</a></h1>
+                <a class="post-title-link" href="/2018/05/19/Linux常用命令/" itemprop="url">Linux常用命令</a></h1>
         
 
         <div class="post-meta">
@@ -1446,8 +1438,8 @@ Android Studio安装Android Studio
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-27T18:26:55+08:00">
-                2017-07-27
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-19T19:24:36+08:00">
+                2018-05-19
               </time>
             
 
@@ -1456,28 +1448,6 @@ Android Studio安装Android Studio
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/工具/" itemprop="url" rel="index">
-                    <span itemprop="name">工具</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -1508,15 +1478,12 @@ Android Studio安装Android Studio
       
         
           
-          notepad++怎么删除包含某些字段的行？
-1234^.*text.*$替换为：（空）^.text.\r?\n  //不留空行
-怎么删除空行
-1选择替换，把查找模式设置为正则表达式，在查找框中输入 ^\s+  ,替换框留空，点“全部替换”
-
-          
+          系统信息
+arch 显示机器的处理器架构(1)uname -m 显示机器的处理器架构(2)uname -r 显示正在使用的内核版本dmidecode -q 显示硬件系统部件 - (SMBIOS / DMI)hdparm -i /dev/hda 罗列一个磁盘的架构特性hdparm -tT /dev/s
+          ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/07/27/notepad-怎么删除包含某些字段的行/#more" rel="contents">
+            <a class="btn" href="/2018/05/19/Linux常用命令/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1567,7 +1534,7 @@ Android Studio安装Android Studio
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/16/Android架构-MVP解析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/02/synchronized/">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="zeng">
@@ -1586,7 +1553,7 @@ Android Studio安装Android Studio
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/04/16/Android架构-MVP解析/" itemprop="url">Android架构 MVP解析</a></h1>
+                <a class="post-title-link" href="/2018/05/02/synchronized/" itemprop="url">synchronized</a></h1>
         
 
         <div class="post-meta">
@@ -1598,8 +1565,8 @@ Android Studio安装Android Studio
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-16T19:01:28+08:00">
-                2017-04-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-02T16:59:38+08:00">
+                2018-05-02
               </time>
             
 
@@ -1608,28 +1575,6 @@ Android Studio安装Android Studio
             
           </span>
 
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android架构/" itemprop="url" rel="index">
-                    <span itemprop="name">Android架构</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -1660,11 +1605,13 @@ Android Studio安装Android Studio
       
         
           
-          回顾MVC讲到MVP前我们有必要回顾下MVC，MVC（Model-View-Controller，模型-视图-控制器）模式是80年代Smalltalk-80出现的一种软件设计模式，后来得到了广泛的应用，用一种业务逻辑、数据、界面显示分离的方法组织代码，在改进和个性化定制界面及用户交互的同时，不需要重
+          在Java中，synchronized关键字是用来控制线程同步的，就是在多线程的环境下，控制synchronized代码段不被多个线程同时执行。synchronized既可以加在一段代码上，也可以加在方法上。
+关键是，不要认为给方法或者代码段加上synchronized就万事大吉，看下面一段代码：
+
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2017/04/16/Android架构-MVP解析/#more" rel="contents">
+            <a class="btn" href="/2018/05/02/synchronized/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1706,7 +1653,7 @@ Android Studio安装Android Studio
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1754,7 +1701,7 @@ Android Studio安装Android Studio
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-count">56</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1765,7 +1712,7 @@ Android Studio安装Android Studio
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1776,7 +1723,7 @@ Android Studio安装Android Studio
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">38</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -1813,7 +1760,7 @@ Android Studio安装Android Studio
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

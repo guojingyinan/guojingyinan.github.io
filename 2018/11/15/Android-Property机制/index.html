@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Property,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述Android系统（本文以Android 4.4为准）的属性（Property）机制有点儿类似Windows系统的注册表，其中的每个属性被组织成简单的键值对（key/value）供外界使用。 ​     我们可以通过在adb shell里敲入getprop命令来获取当前系统的所有属性内容，而且，我们还可以敲入类似“getprop 属性名”的命令来获取特定属性的值。另外，设置属性值的方法也很简单">
+<meta name="keywords" content="Android,Property">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Property机制">
+<meta property="og:url" content="http://yoursite.com/2018/11/15/Android-Property机制/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="概述Android系统（本文以Android 4.4为准）的属性（Property）机制有点儿类似Windows系统的注册表，其中的每个属性被组织成简单的键值对（key/value）供外界使用。 ​     我们可以通过在adb shell里敲入getprop命令来获取当前系统的所有属性内容，而且，我们还可以敲入类似“getprop 属性名”的命令来获取特定属性的值。另外，设置属性值的方法也很简单">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/11/15/Android-Property机制/1.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/11/15/Android-Property机制/2.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/11/15/Android-Property机制/1.png">
+<meta property="og:updated_time" content="2018-11-15T03:05:59.373Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Property机制">
+<meta name="twitter:description" content="概述Android系统（本文以Android 4.4为准）的属性（Property）机制有点儿类似Windows系统的注册表，其中的每个属性被组织成简单的键值对（key/value）供外界使用。 ​     我们可以通过在adb shell里敲入getprop命令来获取当前系统的所有属性内容，而且，我们还可以敲入类似“getprop 属性名”的命令来获取特定属性的值。另外，设置属性值的方法也很简单">
+<meta name="twitter:image" content="http://yoursite.com/2018/11/15/Android-Property机制/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/15/Android-Property机制/">
+
+
+
+
+
+  <title>Android Property机制 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/15/Android-Property机制/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android Property机制</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-15T20:36:44+08:00">
+                2018-11-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>Android系统（本文以Android 4.4为准）的属性（Property）机制有点儿类似Windows系统的注册表，其中的每个属性被组织成简单的键值对（key/value）供外界使用。</p>
+<p>​     我们可以通过在adb shell里敲入getprop命令来获取当前系统的所有属性内容，而且，我们还可以敲入类似“getprop 属性名”的命令来获取特定属性的值。另外，设置属性值的方法也很简单，只需敲入“setprop 属性名 新值”命令即可。</p>
+<p>可是问题在于我们不想只认识到这个层次，我们希望了解更多一些Property机制的运作机理，而这才是本文关心的重点。</p>
+<p>​     说白了，Property机制的运作机理可以汇总成以下几句话：</p>
+<ol>
+<li>系统一启动就会从若干属性脚本文件中加载属性内容；</li>
+<li>系统中的所有属性（key/value）会存入同一块共享内存中；</li>
+<li>系统中的各个进程会将这块共享内存映射到自己的内存空间，这样就可以直接读取属性内容了；</li>
+<li>系统中只有一个实体可以设置、修改属性值，它就是属性服务（Property Service）；</li>
+<li>不同进程只可以通过socket方式，向属性服务发出修改属性值的请求，而不能直接修改属性值；</li>
+<li>共享内存中的键值内容会以一种字典树的形式进行组织。</li>
+</ol>
+<p>Property机制的示意图如下：</p>
+<p><img src="/2018/11/15/Android-Property机制/1.jpg" alt=""></p>
+<h3 id="Property-Service"><a href="#Property-Service" class="headerlink" title="Property Service"></a>Property Service</h3><h4 id="init进程里的Property-Service"><a href="#init进程里的Property-Service" class="headerlink" title="init进程里的Property Service"></a>init进程里的Property Service</h4><p>Property Service实体其实是在init进程里启动的。我们知道，init是Linux系统中用户空间的第一个进程。它负责创建系统中最关键的几个子进程，比如zygote等等。在本节中，我们主要关心init进程是如何启动Property Service的。</p>
+<p>我们查看core/init/Init.c文件，可以看到init进程的main()函数，它里面和property相关的关键动作有：</p>
+<ol>
+<li>间接调用<strong>system_property_area_init()：打开属性共享内存，并记入</strong>system_property_area变量；</li>
+<li>间接调用init_workspace()：只读打开属性共享内存，并记入环境变量；</li>
+<li>根据init.rc，异步激发property_service_init_action()，该函数中会：<ul>
+<li>加载若干属性文本文件，将具体属性、属性值记入属性共享内存；</li>
+<li>创建并监听socket；</li>
+</ul>
+</li>
+<li>根据init.rc，异步激发queue_property_triggers_action()，将刚刚加载的属性对应的激发动作，推入action列表。</li>
+</ol>
+<p>main()中的调用关系如下：</p>
+<p><img src="/2018/11/15/Android-Property机制/2.jpg" alt=""></p>
+<h5 id="初始化属性共享内存"><a href="#初始化属性共享内存" class="headerlink" title="初始化属性共享内存"></a>初始化属性共享内存</h5><p>​    我们可以看到，在init进程的main()函数里，辗转打开了一个内存文件“/dev/<strong>properties</strong>”，并把它设定为128KB大小，接着调用mmap()将这块内存映射到init进程空间了。这个内存的首地址被记录在<strong>system_property_area</strong>全局变量里，以后每添加或修改一个属性，都会基于这个<strong>system_property_area</strong>变量来计算位置。</p>
+<p>​      初始化属性内存块时，为什么要两次open那个/dev/<strong>properties</strong>文件呢？我想原因是这样的：第一次open的句柄，最终是给属性服务自己用的，所以需要有读写权限；而第二次open的句柄，会被记入pa_workspace.fd，并在合适时机添加进环境变量，供其他进程使用，因此只能具有读取权限。</p>
+<p>第一次open时，执行的代码如下： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fd = open(property_filename, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC | O_EXCL, 0444);</span><br></pre></td></tr></table></figure>
+<p>传给open()的参数标识里指明了O_RDWR，表示用“读写方式”打开文件。另外O_NOFOLLOW标识主要是为了防止我们打开“符号链接”，不过我们知道，<strong>properties</strong>文件并不是符号链接，所以当然可以成功open。O_CLOEXEC标识是为了保证一种独占性，也就是说当init进程打开这个文件时，此时就算其他进程也open这个文件，也会在调用exec执行新程序时自动关闭该文件句柄。O_EXCL标识和O_CREATE标识配合起来，表示如果文件不存在，则创建之，而如果文件已经存在，那么open就会失败。第一次open动作后，会给<strong>system_property_area</strong>赋值，然后程序会立即close刚打开的句柄。</p>
+<p>第二次open动作发生在接下来的init_workspace()函数里。此时会再一次打开<strong>properties</strong>文件，这次却是以只读模式打开的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> fd = open(PROP_FILENAME, O_RDONLY | O_NOFOLLOW);</span><br></pre></td></tr></table></figure>
+<p>打开的句柄记录在pa_workspace.fd处，以后每当init进程执行socket命令，并调用service_start()时，会执行类似下面的句子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">get_property_workspace(&amp;fd, &amp;sz);   <span class="comment">// 读取pa_workspace.fd </span></span><br><span class="line"><span class="built_in">sprintf</span>(tmp, <span class="string">"%d,%d"</span>, dup(fd), sz); </span><br><span class="line">add_environment(<span class="string">"ANDROID_PROPERTY_WORKSPACE"</span>, tmp);</span><br></pre></td></tr></table></figure>
+<p>说白了就是把pa_workspace.fd的句柄记入一个名叫“ANDROID_PROPERTY_WORKSPACE”的环境变量去。</p>
+<p><code>system/core/init/Init.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* add_environment - add "key=value" to the current environment */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add_environment</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *key, <span class="keyword">const</span> <span class="keyword">char</span> *val)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (n = <span class="number">0</span>; n &lt; <span class="number">31</span>; n++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!ENV[n]) &#123;</span><br><span class="line">            <span class="keyword">size_t</span> len = <span class="built_in">strlen</span>(key) + <span class="built_in">strlen</span>(val) + <span class="number">2</span>;</span><br><span class="line">            <span class="keyword">char</span> *entry = <span class="built_in">malloc</span>(len);</span><br><span class="line">            <span class="built_in">snprintf</span>(entry, len, <span class="string">"%s=%s"</span>, key, val);</span><br><span class="line">            ENV[n] = entry;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个环境变量在日后有可能被其他进程拿来用，从而将属性内存区映射到自己的内存空间去，这个后文会细说。</p>
+<p>​     接下来，main()函数在设置好属性内存块之后，会调用queue_builtin_action()函数向内部的action_list列表添加action节点。关于这部分的详情，可参考其他讲述Android启动机制的文档，这里不再赘述。我们只需知道，后续，系统会在合适时机回调“由queue_builtin_action()的参数”所指定的property_service_init_action()函数就可以了。</p>
+<h5 id="初始化属性服务"><a href="#初始化属性服务" class="headerlink" title="初始化属性服务"></a>初始化属性服务</h5><p>property_service_init_action()函数只是在简单调用start_property_service()而已，后者的代码如下：</p>
+<p><code>core/init/Property_service.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">start_property_service</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> fd;</span><br><span class="line"></span><br><span class="line">    load_properties_from_file(PROP_PATH_SYSTEM_BUILD);</span><br><span class="line">    load_properties_from_file(PROP_PATH_SYSTEM_DEFAULT);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Read vendor-specific property runtime overrides. */</span></span><br><span class="line">    vendor_load_properties();</span><br><span class="line"></span><br><span class="line">    load_override_properties();</span><br><span class="line">    <span class="comment">/* Read persistent properties after all default values have been loaded. */</span></span><br><span class="line">    load_persistent_properties();</span><br><span class="line"></span><br><span class="line">    fd = create_socket(PROP_SERVICE_NAME, SOCK_STREAM, <span class="number">0666</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(fd &lt; <span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">    fcntl(fd, F_SETFD, FD_CLOEXEC);</span><br><span class="line">    fcntl(fd, F_SETFL, O_NONBLOCK);</span><br><span class="line"></span><br><span class="line">    listen(fd, <span class="number">8</span>);</span><br><span class="line">    property_set_fd = fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其主要动作无非是加载若干属性文件，然后创建并监听一个socket接口。</p>
+<h6 id="加载属性文本文件"><a href="#加载属性文本文件" class="headerlink" title="加载属性文本文件"></a>加载属性文本文件</h6><p>start_property_service()函数首先会调用load_properties_from_file()函数，尝试加载一些属性脚本文件，并将其中的内容写入属性内存块里。从代码里可以看到，主要加载的文件有： </p>
+<ul>
+<li>/system/build.prop </li>
+<li>/system/default.prop（该文件不一定存在） </li>
+<li>/data/local.prop </li>
+<li>/data/property目录里的若干脚本</li>
+</ul>
+<h4 id="处理属性设置命令"><a href="#处理属性设置命令" class="headerlink" title="处理属性设置命令"></a>处理属性设置命令</h4><p>我们还是先回到前文init进程处理属性设置动作的地方：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">void handle_property_set_fd()</span><br><span class="line">&#123;</span><br><span class="line">        . . . . . .</span><br><span class="line">        if(memcmp(msg.name,&quot;ctl.&quot;,4) == 0) &#123;</span><br><span class="line">            . . . . . .</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            if (check_perms(msg.name, cr.uid, cr.gid, source_ctx)) &#123;</span><br><span class="line">                property_set((char*) msg.name, (char*) msg.value);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                ERROR(&quot;sys_prop: permission denied uid:%d  name:%s\n&quot;,</span><br><span class="line">                      cr.uid, msg.name);</span><br><span class="line">            &#125;</span><br><span class="line">            . . . . . .</span><br><span class="line">            close(s);</span><br><span class="line">        &#125;</span><br><span class="line">        . . . . . .</span><br><span class="line">        break;</span><br><span class="line">    . . . . . .</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="check-perms"><a href="#check-perms" class="headerlink" title="check_perms()"></a>check_perms()</h5><p>要设置普通属性，也是要具有一定权限哩。请看上面的check_perms()一句。该函数的代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">static int check_perms(const char *name, unsigned int uid, unsigned int gid, char *sctx)</span><br><span class="line">&#123;</span><br><span class="line">    int i;</span><br><span class="line">    unsigned int app_id;</span><br><span class="line"></span><br><span class="line">    if(!strncmp(name, &quot;ro.&quot;, 3))</span><br><span class="line">        name +=3;</span><br><span class="line"></span><br><span class="line">    if (uid == 0)</span><br><span class="line">        return check_mac_perms(name, sctx);</span><br><span class="line"></span><br><span class="line">    app_id = multiuser_get_app_id(uid);</span><br><span class="line">    if (app_id == AID_BLUETOOTH) &#123;</span><br><span class="line">        uid = app_id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    for (i = 0; property_perms[i].prefix; i++) &#123;</span><br><span class="line">        if (strncmp(property_perms[i].prefix, name,</span><br><span class="line">                    strlen(property_perms[i].prefix)) == 0) &#123;</span><br><span class="line">            if ((uid &amp;&amp; property_perms[i].uid == uid) ||</span><br><span class="line">                (gid &amp;&amp; property_perms[i].gid == gid)) &#123;</span><br><span class="line"></span><br><span class="line">                return check_mac_perms(name, sctx);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主要也是在查表，property_perms表的定义如下：</p>
+<p><img src="/2018/11/15/Android-Property机制/1.png" alt=""></p>
+<p>这其实很容易理解，比如要设置“sys.”打头的系统属性，进程的uid就必须是AID_SYSTEM，否则阿猫阿狗都能设置系统属性，岂不糟糕。</p>
+<h5 id="property-set"><a href="#property-set" class="headerlink" title="property_set()"></a>property_set()</h5><p>权限检查通过之后，就可以真正设置属性了。在前文“概述”一节中，我们已经说过，只有Property Service（即init进程）可以写入属性值，而普通进程最多只能通过socket向Property Service发出设置新属性值的请求，最终还得靠Property Service来写。那么我们就来看看Property Service里具体是怎么写的。</p>
+<p>总体说来，property_set()会做如下工作：</p>
+<ol>
+<li>判断待设置的属性名是否合法； </li>
+<li>尽力从“属性共享内存”中找到匹配的prop_info节点，如果能找到，就调用<strong>system_property_update()，当然如果属性是以“ro.”打头的，说明这是个只读属性，此时不会update的；如果找不到，则调用</strong>system_property_add()添加属性节点。 </li>
+<li>在update或add动作之后，还需要做一些善后处理。比如，如果改动的是“net.”开头的属性，那么需要重新设置一下net.change属性，属性值为刚刚设置的属性名字。 </li>
+<li>如果要设置persist属性的话，只有在系统将所有的默认persist属性都加载完毕后，才能设置成功。persist属性应该是那种会存入可持久化文件的属性，这样，系统在下次启动后，可以将该属性的初始值设置为系统上次关闭时的值。 </li>
+<li>如果将“selinux.reload_policy”属性设为“1”了，那么会进一步调用selinux_reload_policy()。这个意味着要重新加载SEAndroid策略。 </li>
+<li>最后还需调用property_changed()函数，其内部会执行init.rc中指定的那些和property同名的action。</li>
+</ol>
+<p>原文：<a href="https://my.oschina.net/youranhongcha/blog/389640" target="_blank" rel="noopener">https://my.oschina.net/youranhongcha/blog/389640</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Property/" rel="tag"># Property</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/07/Android首次启动时间长优化之预编译提取Odex/" rel="next" title="Android首次启动时间长优化之预编译提取Odex">
+                <i class="fa fa-chevron-left"></i> Android首次启动时间长优化之预编译提取Odex
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/19/设计模式（一）设计六大原则/" rel="prev" title="设计模式（一）设计六大原则">
+                设计模式（一）设计六大原则 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Property-Service"><span class="nav-number">2.</span> <span class="nav-text">Property Service</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#init进程里的Property-Service"><span class="nav-number">2.1.</span> <span class="nav-text">init进程里的Property Service</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化属性共享内存"><span class="nav-number">2.1.1.</span> <span class="nav-text">初始化属性共享内存</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化属性服务"><span class="nav-number">2.1.2.</span> <span class="nav-text">初始化属性服务</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#加载属性文本文件"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">加载属性文本文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#处理属性设置命令"><span class="nav-number">2.2.</span> <span class="nav-text">处理属性设置命令</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#check-perms"><span class="nav-number">2.2.1.</span> <span class="nav-text">check_perms()</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#property-set"><span class="nav-number">2.2.2.</span> <span class="nav-text">property_set()</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

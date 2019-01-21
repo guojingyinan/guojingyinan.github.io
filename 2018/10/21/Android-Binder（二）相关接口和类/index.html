@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.jpg?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.jpg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Android,Binder,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Binder的跨进程机制上一篇文章已近说了Binder的设计原理，再看一下Binder示意图。  图中A侧的圆形块，表示“Binder代理方”，主要用于向远方发送语义，而B侧的方形块则表示“Binder响应方”，主要用于响应语义。在后文中，我们可以看到，Binder代理方大概对应于C++层次的BpBinder对象，而Binder响应方则对应于BBinder对象。这两个对象在后文会详细阐述，此处不必">
+<meta name="keywords" content="Android,Binder">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Binder（二）相关接口和类">
+<meta property="og:url" content="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/index.html">
+<meta property="og:site_name" content="Zeng&#39;s Blog">
+<meta property="og:description" content="Binder的跨进程机制上一篇文章已近说了Binder的设计原理，再看一下Binder示意图。  图中A侧的圆形块，表示“Binder代理方”，主要用于向远方发送语义，而B侧的方形块则表示“Binder响应方”，主要用于响应语义。在后文中，我们可以看到，Binder代理方大概对应于C++层次的BpBinder对象，而Binder响应方则对应于BBinder对象。这两个对象在后文会详细阐述，此处不必">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/2_1.png">
+<meta property="og:image" content="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/2_2.png">
+<meta property="og:image" content="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/2_3.png">
+<meta property="og:updated_time" content="2018-11-13T08:53:37.118Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Binder（二）相关接口和类">
+<meta name="twitter:description" content="Binder的跨进程机制上一篇文章已近说了Binder的设计原理，再看一下Binder示意图。  图中A侧的圆形块，表示“Binder代理方”，主要用于向远方发送语义，而B侧的方形块则表示“Binder响应方”，主要用于响应语义。在后文中，我们可以看到，Binder代理方大概对应于C++层次的BpBinder对象，而Binder响应方则对应于BBinder对象。这两个对象在后文会详细阐述，此处不必">
+<meta name="twitter:image" content="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/2_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/">
+
+
+
+
+
+  <title>Android Binder（二）相关接口和类 | Zeng's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zeng's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">心之所向，素履以往</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/21/Android-Binder（二）相关接口和类/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zeng's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Android Binder（二）相关接口和类</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-21T19:22:08+08:00">
+                2018-10-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing">
+                  <a href="/categories/IPC/" itemprop="url" rel="index">
+                    <span itemprop="name">IPC</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="Binder的跨进程机制"><a href="#Binder的跨进程机制" class="headerlink" title="Binder的跨进程机制"></a>Binder的跨进程机制</h3><p>上一篇文章已近说了Binder的设计原理，再看一下Binder示意图。</p>
+<p><img src="/2018/10/21/Android-Binder（二）相关接口和类/2_1.png" alt=""></p>
+<p>图中A侧的圆形块，表示“Binder代理方”，主要用于向远方发送语义，而B侧的方形块则表示“Binder响应方”，主要用于响应语义。在后文中，我们可以看到，Binder代理方大概对应于C++层次的BpBinder对象，而Binder响应方则对应于BBinder对象。这两个对象在后文会详细阐述，此处不必太细究。</p>
+<p>Binder代理方主要只负责了“传递信息”的工作，并没有起到“远程过程调用”的作用，如果要支持远程过程调用，我们还必须提供“接口代理方”和“接口实现体”。</p>
+<p>A进程并不直接和BpBinder（Binder代理）打交道，而是通过调用BpInterface（接口代理）的成员函数来完成远程调用的。此时，BpBinder已经被聚合进BpInterface了，它在BpInterface内部完成了一切跨进程的机制。另一方面，与BpInterface相对的响应端实体就是BnInterface（接口实现）了。需要注意的是，BnInterface是继承于BBinder的，它并没有采用聚合的方式来包含一个BBinder对象，所以上图中B侧的BnInterface块和BBinder块的背景图案是相同的。</p>
+<h3 id="Binder相关接口和类"><a href="#Binder相关接口和类" class="headerlink" title="Binder相关接口和类"></a>Binder相关接口和类</h3><p>Android的整个跨进程通信机制都是基于Binder的，这种机制不但会在底层使用，也会在上层使用，所以必须提供Java和C++两个层次的支持。</p>
+<h4 id="Java层次的binder元素"><a href="#Java层次的binder元素" class="headerlink" title="Java层次的binder元素"></a>Java层次的binder元素</h4><p>Java层次里并没有我们前文图中所表示的BpBinder、BpInterface、BBinder等较低层次的概念，取而代之的是IBinder接口、IInterface等接口。Android要求所有的Binder实体都必须实现IBinder接口，该接口的定义截选如下：</p>
+<p><code>frameworks/base/core/java/android/os/IBinder.java</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public interface IBinder </span><br><span class="line">&#123;</span><br><span class="line">    . . . . . .</span><br><span class="line">    public String getInterfaceDescriptor() throws RemoteException;</span><br><span class="line">    public boolean pingBinder();</span><br><span class="line">    public boolean isBinderAlive();</span><br><span class="line">    public IInterface queryLocalInterface(String descriptor);</span><br><span class="line">    public void dump(FileDescriptor fd, String[] args) throws RemoteException;</span><br><span class="line">    public void dumpAsync(FileDescriptor fd, String[] args) throws RemoteException;</span><br><span class="line">    public boolean transact(int code, Parcel data, Parcel reply, int flags) throws </span><br><span class="line">    RemoteException;</span><br><span class="line">    </span><br><span class="line">    public interface DeathRecipient </span><br><span class="line">    &#123;</span><br><span class="line">        public void binderDied();</span><br><span class="line">    &#125;</span><br><span class="line">    public void linkToDeath(DeathRecipient recipient, int flags)throws </span><br><span class="line">    RemoteException;</span><br><span class="line">    public boolean unlinkToDeath(DeathRecipient recipient, int flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>另外，不管是代理方还是实体方，都必须实现IInterface接口：</p>
+<pre><code>/**
+ * Base class for Binder interfaces.  When defining a new interface,
+ * you must derive it from IInterface.
+ */
+public interface IInterface
+{
+    /**
+     * Retrieve the Binder object associated with this interface.
+     * You must use this instead of a plain cast, so that proxy objects
+     * can return the correct result.
+     */
+    public IBinder asBinder();
+}
+</code></pre><p>Java层次中，与Binder相关的接口或类的继承关系如下：</p>
+<p><img src="/2018/10/21/Android-Binder（二）相关接口和类/2_2.png" alt=""></p>
+<p>在实际使用中，我们并不需要编写上图的XXXXNative、XXXXProxy，它们会由ADT根据我们编写的aidl脚本自动生成。用户只需继承XXXXNative编写一个具体的XXXXService即可，这个XXXXService就是远程通信的服务实体类，而XXXXProxy则是其对应的代理类。</p>
+<p>关于Java层次的binder组件，我们就先说这么多，主要是先介绍一个大概。就研究跨进程通信而言，其实质内容基本上都在C++层次，Java层次只是一个壳而已。以后我会写专文来打通Java层次和C++层次，看看它们是如何通过JNI技术关联起来的。现在我们还是把注意力集中在C++层次吧。</p>
+<h4 id="C-层次的binder元素"><a href="#C-层次的binder元素" class="headerlink" title="C++层次的binder元素"></a>C++层次的binder元素</h4><p>在C++层次，就能看到我们前文所说的BpBinder类和BBinder类了。这两个类都继承于IBinder，IBinder的定义截选如下：</p>
+<p><code>frameworks/native/include/binder/IBinder.h</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">class IBinder : public virtual RefBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    . . . . . .</span><br><span class="line">    IBinder();</span><br><span class="line">    virtual sp&lt;IInterface&gt;  queryLocalInterface(const String16&amp; descriptor);</span><br><span class="line">    virtual const String16&amp; getInterfaceDescriptor() const = 0;</span><br><span class="line"> </span><br><span class="line">    virtual bool            isBinderAlive() const = 0;</span><br><span class="line">    virtual status_t        pingBinder() = 0;</span><br><span class="line">    virtual status_t        dump(int fd, const Vector&lt;String16&gt;&amp; args) = 0;</span><br><span class="line">    virtual status_t        transact(uint32_t code, const Parcel&amp; data,</span><br><span class="line">                                     Parcel* reply, uint32_t flags = 0) = 0;</span><br><span class="line"> </span><br><span class="line">    class DeathRecipient : public virtual RefBase</span><br><span class="line">    &#123;</span><br><span class="line">    public:</span><br><span class="line">        virtual void binderDied(const wp&lt;IBinder&gt;&amp; who) = 0;</span><br><span class="line">    &#125;;</span><br><span class="line">    virtual status_t        linkToDeath(const sp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                        void* cookie = NULL, uint32_t flags = 0) = 0;</span><br><span class="line">    virtual status_t        unlinkToDeath(const wp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                          void* cookie = NULL, uint32_t flags = 0,</span><br><span class="line">                                          wp&lt;DeathRecipient&gt;* outRecipient = NULL) = 0;</span><br><span class="line"> </span><br><span class="line">    virtual bool            checkSubclass(const void* subclassID) const;</span><br><span class="line">    </span><br><span class="line">    typedef void (*object_cleanup_func)(const void* id, void* obj, </span><br><span class="line">    void* cleanupCookie);</span><br><span class="line">    virtual void            attachObject(const void* objectID, void* object,</span><br><span class="line">                                         void* cleanupCookie, object_cleanup_func func) </span><br><span class="line">                                         = 0;</span><br><span class="line">    virtual void*           findObject(const void* objectID) const = 0;</span><br><span class="line">    virtual void            detachObject(const void* objectID) = 0;</span><br><span class="line"> </span><br><span class="line">    virtual BBinder*        localBinder();</span><br><span class="line">    virtual BpBinder*       remoteBinder();</span><br><span class="line"> </span><br><span class="line">protected:</span><br><span class="line">    virtual          ~IBinder();</span><br><span class="line">private:</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p> C++层次的继承关系图如下：</p>
+<p><img src="/2018/10/21/Android-Binder（二）相关接口和类/2_3.png" alt=""></p>
+<p>其中有以下几个很关键的类：</p>
+<ul>
+<li>BpBinder</li>
+<li>BpInterface</li>
+<li>BBinder</li>
+<li>BnInterface</li>
+</ul>
+<p>它们扮演着很重要的角色。</p>
+<h5 id="BpBinder"><a href="#BpBinder" class="headerlink" title="BpBinder"></a>BpBinder</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class BpBinder : public IBinder</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">BpBinder(int32_t handle);</span><br><span class="line">    inline  int32_t     handle() const &#123; return mHandle; &#125;</span><br><span class="line"> </span><br><span class="line">    virtual const String16&amp;    getInterfaceDescriptor() const;</span><br><span class="line">    virtual bool        isBinderAlive() const;</span><br><span class="line">    virtual status_t    pingBinder();</span><br><span class="line">    virtual status_t    dump(int fd, const Vector&lt;String16&gt;&amp; args);</span><br><span class="line"> </span><br><span class="line">    virtual status_t    transact(uint32_t code, const Parcel&amp; data,</span><br><span class="line">                                    Parcel* reply, uint32_t flags = 0);</span><br><span class="line">    virtual status_t    linkToDeath(const sp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                    void* cookie = NULL, uint32_t flags = 0);</span><br><span class="line">    virtual status_t    unlinkToDeath(const wp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                            void* cookie = NULL, uint32_t flags = 0,</span><br><span class="line">                                            wp&lt;DeathRecipient&gt;* outRecipient = NULL);</span><br></pre></td></tr></table></figure>
+<p>作为代理端的核心，BpBinder最重要的职责就是实现跨进程传输的传输机制，至于具体传输的是什么语义，它并不关心。我们观察它的transact()函数的参数，可以看到所有的语义都被打包成Parcel了。其他的成员函数，我们先不深究，待我们储备了足够的基础知识后，再回过头研究它们不迟。</p>
+<h5 id="BpInterface"><a href="#BpInterface" class="headerlink" title="BpInterface"></a>BpInterface</h5><p> 另一个重要的类是BpInterface，它的定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename INTERFACE&gt;</span><br><span class="line">class BpInterface : public INTERFACE, public BpRefBase</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">BpInterface(const sp&lt;IBinder&gt;&amp; remote);</span><br><span class="line"> </span><br><span class="line">protected:</span><br><span class="line">    virtual IBinder*     onAsBinder();</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>其基类BpRefBase的定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class BpRefBase : public virtual RefBase</span><br><span class="line">&#123;</span><br><span class="line">protected:</span><br><span class="line">                            BpRefBase(const sp&lt;IBinder&gt;&amp; o);</span><br><span class="line">    virtual                 ~BpRefBase();</span><br><span class="line">    virtual void            onFirstRef();</span><br><span class="line">    virtual void            onLastStrongRef(const void* id);</span><br><span class="line">    virtual bool            onIncStrongAttempted(uint32_t flags, const void* id);</span><br><span class="line">    inline  IBinder*        remote()                &#123; return mRemote; &#125;</span><br><span class="line">    inline  IBinder*        remote() const          &#123; return mRemote; &#125;</span><br><span class="line"> </span><br><span class="line">private:</span><br><span class="line">BpRefBase(const BpRefBase&amp; o);</span><br><span class="line">    BpRefBase&amp;              operator=(const BpRefBase&amp; o);</span><br><span class="line">    IBinder* const           mRemote;</span><br><span class="line">    RefBase::weakref_type*  mRefs;</span><br><span class="line">    volatile int32_t         mState;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>BpInterface使用了模板技术，而且因为它继承了BpRefBase，所以先天上就聚合了一个mRemote成员，这个成员记录的就是前面所说的BpBinder对象啦。以后，我们还需要继承BpInterface&lt;&gt;实现我们自己的代理类。</p>
+<p>在实际的代码中，我们完全可以创建多个聚合同一BpBinder对象的代理对象，这些代理对象就本质而言，对应着同一个远端binder实体。在Android框架中，常常把指向同一binder实体的多个代理称为token，这样即便这些代理分别处于不同的进程中，它们也具有了某种内在联系。这个知识点需要大家关注。</p>
+<h5 id="BBinder"><a href="#BBinder" class="headerlink" title="BBinder"></a>BBinder</h5><p>Binder远程通信的目标端实体必须继承于BBinder类，该类和BpBinder相对，主要关心的只是传输方面的东西，不太关心所传输的语义。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">class BBinder : public IBinder</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">BBinder();</span><br><span class="line">    virtual const String16&amp; getInterfaceDescriptor() const;</span><br><span class="line">    virtual bool        isBinderAlive() const;</span><br><span class="line">    virtual status_t    pingBinder();</span><br><span class="line">    virtual status_t    dump(int fd, const Vector&lt;String16&gt;&amp; args);</span><br><span class="line"> </span><br><span class="line">    virtual status_t    transact(uint32_t code, const Parcel&amp; data,</span><br><span class="line">                                      Parcel* reply, uint32_t flags = 0);</span><br><span class="line"> </span><br><span class="line">    virtual status_t    linkToDeath(const sp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                    void* cookie = NULL, uint32_t flags = 0);</span><br><span class="line"> </span><br><span class="line">    virtual status_t    unlinkToDeath(const wp&lt;DeathRecipient&gt;&amp; recipient,</span><br><span class="line">                                            void* cookie = NULL, uint32_t flags = 0,</span><br><span class="line">                                            wp&lt;DeathRecipient&gt;* outRecipient = NULL);</span><br><span class="line"> </span><br><span class="line">    virtual void        attachObject(const void* objectID, void* object,</span><br><span class="line">                                          void* cleanupCookie, object_cleanup_func func);</span><br><span class="line">    virtual void*       findObject(const void* objectID) const;</span><br><span class="line">    virtual void        detachObject(const void* objectID);</span><br><span class="line"> </span><br><span class="line">    virtual BBinder*    localBinder();</span><br><span class="line"> </span><br><span class="line">protected:</span><br><span class="line">    virtual             ~BBinder();</span><br><span class="line"> </span><br><span class="line">    virtual status_t    onTransact(uint32_t code, const Parcel&amp; data,</span><br><span class="line">                                        Parcel* reply, uint32_t flags = 0);</span><br><span class="line">private:</span><br><span class="line">    BBinder(const BBinder&amp; o);</span><br><span class="line">    BBinder&amp;    operator=(const BBinder&amp; o);</span><br><span class="line"> </span><br><span class="line">    class Extras;</span><br><span class="line">    Extras*     mExtras;</span><br><span class="line">    void*       mReserved0;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>我们目前只需关心上面的transact()成员函数，其他函数留待以后再分析。transact函数的代码如下：</p>
+<p><code>frameworks/native/libs/binder/Binder.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">status_t BBinder::transact(uint32_t code, const Parcel&amp; data, </span><br><span class="line">                           Parcel* reply, uint32_t flags)</span><br><span class="line">&#123;</span><br><span class="line">    data.setDataPosition(0);</span><br><span class="line">    status_t err = NO_ERROR;</span><br><span class="line">    switch (code) </span><br><span class="line">    &#123;</span><br><span class="line">        case PING_TRANSACTION:</span><br><span class="line">            reply-&gt;writeInt32(pingBinder());</span><br><span class="line">            break;</span><br><span class="line">        default:</span><br><span class="line">            err = onTransact(code, data, reply, flags);</span><br><span class="line">            break;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    if (reply != NULL) </span><br><span class="line">    &#123;</span><br><span class="line">        reply-&gt;setDataPosition(0);</span><br><span class="line">    &#125;</span><br><span class="line">    return err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>transact()内部会调用onTransact()，从而走到用户所定义的子类的onTransact()里。这个onTransact()的一大作用就是解析经由Binder机制传过来的语义了。</p>
+<h5 id="BnInterface"><a href="#BnInterface" class="headerlink" title="BnInterface"></a>BnInterface</h5><p>远程通信目标端的另一个重要类是BnInterface&lt;&gt;，它是与BpInterface&lt;&gt;相对应的模板类，比较关心传输的语义。一般情况下，服务端并不直接使用BnInterface&lt;&gt;，而是使用它的某个子类。为此，我们需要编写一个新的BnXXX子类，并重载它的onTransact()成员函数。</p>
+<p>BnInterface&lt;&gt;的定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename INTERFACE&gt;</span><br><span class="line">class BnInterface : public INTERFACE, public BBinder</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual sp&lt;IInterface&gt;      queryLocalInterface(const String16&amp; _descriptor);</span><br><span class="line">    virtual const String16&amp;     getInterfaceDescriptor() const;</span><br><span class="line"> </span><br><span class="line">protected:</span><br><span class="line">    virtual IBinder*            onAsBinder();</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>如上所示，BnInterface&lt;&gt;继承于BBinder，但它并没有实现一个默认的onTransact()成员函数，所以在远程通信时，前文所说的BBinder::transact()调用的onTransact()应该就是BnInterface&lt;&gt;的某个子类的onTransact()成员函数。</p>
+<h4 id="几个重要的C-宏或模板"><a href="#几个重要的C-宏或模板" class="headerlink" title="几个重要的C++宏或模板"></a>几个重要的C++宏或模板</h4><p>为了便于编写新的接口和类，Android在C++层次提供了几个重要的宏和模板，比如我们在IInterface.h文件中，可以看到DECLARE_META_INTERFACE、IMPLEMENT_META_INTERFACE的定义。</p>
+<h5 id="DECLARE-META-INTERFACE"><a href="#DECLARE-META-INTERFACE" class="headerlink" title="DECLARE_META_INTERFACE()"></a>DECLARE_META_INTERFACE()</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#define DECLARE_META_INTERFACE(INTERFACE)                               \</span><br><span class="line">    static const android::String16 descriptor;                          \</span><br><span class="line">    static android::sp&lt;I##INTERFACE&gt; asInterface(                       \</span><br><span class="line">            const android::sp&lt;android::IBinder&gt;&amp; obj);                  \</span><br><span class="line">    virtual const android::String16&amp; getInterfaceDescriptor() const;    \</span><br><span class="line">    I##INTERFACE();                                                     \</span><br><span class="line">    virtual ~I##INTERFACE();                                            \</span><br></pre></td></tr></table></figure>
+<p>我们举个实际的例子，来说明如何使用这个宏：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">class ICamera: public IInterface</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    DECLARE_META_INTERFACE(Camera); </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>上例中IDvbCallback内部使用了DECLARE_META_INTERFACE(Camera)，我们把宏展开后，可以看到ICamera类的定义相当于：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">class ICamera: public IInterface</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line"> </span><br><span class="line">static const android::String16 descriptor;</span><br><span class="line">static android::sp&lt;ICamera&gt; asInterface( const android::sp&lt;android::IBinder&gt;&amp; obj);</span><br><span class="line">virtual const android::String16&amp; getInterfaceDescriptor() const;</span><br><span class="line">ICamera();</span><br><span class="line">virtual ~ICamera();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>宏展开的部分就是中间那5行代码，其中最关键的就是asInterface()函数了，这个函数将承担把BpBinder打包成BpInterface的职责。</p>
+<h5 id="IMPLEMENT-META-INTERFACE"><a href="#IMPLEMENT-META-INTERFACE" class="headerlink" title="IMPLEMENT_META_INTERFACE()"></a>IMPLEMENT_META_INTERFACE()</h5><p> 与DECLARE_META_INTERFACE相对的就是IMPLEMENT_META_INTERFACE宏。它的定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">#define IMPLEMENT_META_INTERFACE(INTERFACE, NAME)                       \</span><br><span class="line">    const android::String16 I##INTERFACE::descriptor(NAME);             \</span><br><span class="line">    const android::String16&amp;                                            \</span><br><span class="line">            I##INTERFACE::getInterfaceDescriptor() const &#123;              \</span><br><span class="line">        return I##INTERFACE::descriptor;                                \</span><br><span class="line">    &#125;                                                                   \</span><br><span class="line">    android::sp&lt;I##INTERFACE&gt; I##INTERFACE::asInterface(                \</span><br><span class="line">            const android::sp&lt;android::IBinder&gt;&amp; obj)                   \</span><br><span class="line">    &#123;                                                                   \</span><br><span class="line">        android::sp&lt;I##INTERFACE&gt; intr;                                 \</span><br><span class="line">        if (obj != NULL) &#123;                                              \</span><br><span class="line">            intr = static_cast&lt;I##INTERFACE*&gt;(                          \</span><br><span class="line">                obj-&gt;queryLocalInterface(                               \</span><br><span class="line">                        I##INTERFACE::descriptor).get());               \</span><br><span class="line">            if (intr == NULL) &#123;                                         \</span><br><span class="line">                intr = new Bp##INTERFACE(obj);                          \</span><br><span class="line">            &#125;                                                           \</span><br><span class="line">        &#125;                                                               \</span><br><span class="line">        return intr;                                                    \</span><br><span class="line">    &#125;                                                                   \</span><br><span class="line">    I##INTERFACE::I##INTERFACE() &#123; &#125;                                    \</span><br><span class="line">    I##INTERFACE::~I##INTERFACE() &#123; &#125;                                   \</span><br></pre></td></tr></table></figure>
+<p>其中，实现了关键的asInterface()函数。</p>
+<p>实际使用IMPLEMENT_META_INTERFACE时，我们只需把它简单地写在binder实体所处的cpp文件中即可，举例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">IMPLEMENT_META_INTERFACE(Camera, &quot;android.hardware.ICamera&quot;);</span><br><span class="line"></span><br><span class="line">status_t BnCamera::onTransact(uint32_t code, const Parcel&amp; data, Parcel* reply, uint32_t flags)</span><br><span class="line">&#123;</span><br><span class="line">    switch (code)</span><br><span class="line">    &#123;</span><br><span class="line">        case IBinder::FIRST_CALL_TRANSACTION:</span><br><span class="line">        &#123;</span><br><span class="line">			...</span><br><span class="line">        &#125;</span><br><span class="line">        default:</span><br><span class="line">            return BBinder::onTransact(code, data, reply, flags);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中的IMPLEMENT_META_INTERFACE(Camera, “android.hardware.ICamera”);一句相当于以下这段代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">const android::String16 ICamera::descriptor(“android.hardware.ICamera”);</span><br><span class="line">const android::String16&amp; ICamera::getInterfaceDescriptor() const </span><br><span class="line">&#123;</span><br><span class="line">return ICamera::descriptor;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">android::sp&lt;ICamera&gt; ICamera::asInterface(const android::sp&lt;android::IBinder&gt;&amp; obj)</span><br><span class="line">&#123;</span><br><span class="line">android::sp&lt;ICamera &gt; intr;</span><br><span class="line">if (obj != NULL) </span><br><span class="line">&#123;</span><br><span class="line">intr = static_cast&lt;ICamera*&gt;(obj-&gt;queryLocalInterface(</span><br><span class="line">ICamera::descriptor).get());</span><br><span class="line">        if (intr == NULL) </span><br><span class="line">&#123;</span><br><span class="line">            intr = new BpCamera(obj);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line">    return intr;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">ICamera::ICamera() &#123; &#125;</span><br><span class="line">ICamera::~ICamera () &#123; &#125;</span><br></pre></td></tr></table></figure>
+<p>看来，其中重点实现了asInterface()成员函数。请注意，asInterface()函数中会先尝试调用queryLocalInterface()来获取intr。此时，如果asInterface()的obj参数是个代理对象（BpBinder），</p>
+<p>那么<code>intr = static_cast&lt;ICamera*&gt;(obj-&gt;queryLocalInterface(...)</code>一句得到的intr基本上就是NULL啦。这是因为除非用户编写的代理类重载queryLocalInterface()函数，否则只会以默认函数为准。而IBinder类中的默认queryLocalInterface()函数如下：</p>
+<p><code>frameworks/native/libs/binder/Binder.cpp</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sp&lt;IInterface&gt;  IBinder::queryLocalInterface(const String16&amp; descriptor)</span><br><span class="line">&#123;</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>另一方面，如果obj参数是个实现体对象（BnInterface对象）的话，那么queryLocalInterface()函数的默认返回值就是实体对象的this指针了，代码如下：</p>
+<p><code>frameworks/native/include/binder/IInterface.h</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename INTERFACE&gt;</span><br><span class="line">inline sp&lt;IInterface&gt; BnInterface&lt;INTERFACE&gt;::queryLocalInterface(const String16&amp; _descriptor)</span><br><span class="line">&#123;</span><br><span class="line">    if (_descriptor == INTERFACE::descriptor) </span><br><span class="line">        return this;</span><br><span class="line">    return NULL;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所举的例子中，我们要研究的是如何将BpBinder转成BpInterface，所以现在我们只阐述obj参数为BpBinder的情况。此时asInterface()函数中obj-&gt;queryLocalInterface()的返回值为NULL，于是asInterface()会走到new BpCamera(obj)一句，这一句是最关键的一句。我们知道，BpCamera继承于BpInterface<icamera>，所以此时所创建的BpCamera对象正是可被App使用的BpInterface代理对象。</icamera></p>
+<p>BpCamera的定义如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">class BpCamera: public BpInterface&lt;ICamera&gt;</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">    BpCamera(const sp&lt;IBinder&gt;&amp; impl)</span><br><span class="line">        : BpInterface&lt;ICamera&gt;(impl)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    // disconnect from camera service</span><br><span class="line">    void disconnect()</span><br><span class="line">    &#123;</span><br><span class="line">        LOGV(&quot;disconnect&quot;);</span><br><span class="line">        Parcel data, reply;</span><br><span class="line">        data.writeInterfaceToken(ICamera::getInterfaceDescriptor());</span><br><span class="line">        remote()-&gt;transact(DISCONNECT, data, &amp;reply);</span><br><span class="line">    &#125;</span><br><span class="line">. . . . . .</span><br></pre></td></tr></table></figure>
+<p>至此，IMPLEMENT_META_INTERFACE宏和asInterface()函数的关系就分析完毕了。</p>
+<h5 id="interface-cast"><a href="#interface-cast" class="headerlink" title="interface_cast"></a>interface_cast</h5><p>不过，我们经常使用的其实并不是asInterface()函数，而是interface_cast()，它简单包装了asInterface()：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename INTERFACE&gt;</span><br><span class="line">inline sp&lt;INTERFACE&gt; interface_cast(const sp&lt;IBinder&gt;&amp; obj)</span><br><span class="line">&#123;</span><br><span class="line">    return INTERFACE::asInterface(obj);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>原文：<a href="https://blog.csdn.net/codefly/article/details/17058607" target="_blank" rel="noopener">https://blog.csdn.net/codefly/article/details/17058607</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Android/" rel="tag"># Android</a>
+          
+            <a href="/tags/Binder/" rel="tag"># Binder</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/20/Android-Binder（一）设计篇/" rel="next" title="Android Binder（一）设计篇">
+                <i class="fa fa-chevron-left"></i> Android Binder（一）设计篇
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/07/Android运行时ART简要介绍/" rel="prev" title="Android运行时ART简要介绍">
+                Android运行时ART简要介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="zeng">
+            
+              <p class="site-author-name" itemprop="name">zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">56</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">38</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder的跨进程机制"><span class="nav-number">1.</span> <span class="nav-text">Binder的跨进程机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder相关接口和类"><span class="nav-number">2.</span> <span class="nav-text">Binder相关接口和类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Java层次的binder元素"><span class="nav-number">2.1.</span> <span class="nav-text">Java层次的binder元素</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-层次的binder元素"><span class="nav-number">2.2.</span> <span class="nav-text">C++层次的binder元素</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#BpBinder"><span class="nav-number">2.2.1.</span> <span class="nav-text">BpBinder</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#BpInterface"><span class="nav-number">2.2.2.</span> <span class="nav-text">BpInterface</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#BBinder"><span class="nav-number">2.2.3.</span> <span class="nav-text">BBinder</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#BnInterface"><span class="nav-number">2.2.4.</span> <span class="nav-text">BnInterface</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#几个重要的C-宏或模板"><span class="nav-number">2.3.</span> <span class="nav-text">几个重要的C++宏或模板</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#DECLARE-META-INTERFACE"><span class="nav-number">2.3.1.</span> <span class="nav-text">DECLARE_META_INTERFACE()</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#IMPLEMENT-META-INTERFACE"><span class="nav-number">2.3.2.</span> <span class="nav-text">IMPLEMENT_META_INTERFACE()</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#interface-cast"><span class="nav-number">2.3.3.</span> <span class="nav-text">interface_cast</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2016 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
